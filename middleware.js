@@ -1,6 +1,8 @@
+import proxyConfig from './proxy.config.json';
+
 /**
  * Proxies API, OAuth, health, and image routes to a separately hosted LibreChat backend.
- * Set LIBRECHAT_API_URL to the backend origin (e.g. https://librechat-api.example.com).
+ * Set LIBRECHAT_API_URL in Vercel project settings (baked into proxy.config.json at build).
  */
 export const config = {
   matcher: [
@@ -13,20 +15,66 @@ export const config = {
   ],
 };
 
+function resolveApiUrl() {
+  const runtime = process.env.LIBRECHAT_API_URL?.trim();
+  if (runtime) {
+    return runtime;
+  }
+  return proxyConfig.apiUrl?.trim() ?? '';
+}
+
+function preLoginConfigFallback(requestUrl) {
+  const origin = `${requestUrl.protocol}//${requestUrl.host}`;
+  return {
+    appTitle: 'LibreChat',
+    serverDomain: origin,
+    emailLoginEnabled: true,
+    registrationEnabled: true,
+    socialLoginEnabled: false,
+    emailEnabled: false,
+    passwordResetEnabled: false,
+    openidLoginEnabled: false,
+    openidAutoRedirect: false,
+    samlLoginEnabled: false,
+    ldapEnabled: false,
+    discordLoginEnabled: false,
+    facebookLoginEnabled: false,
+    githubLoginEnabled: false,
+    googleLoginEnabled: false,
+    appleLoginEnabled: false,
+    sharePointFilePickerEnabled: false,
+    sharedLinksEnabled: false,
+    publicSharedLinksEnabled: false,
+    turnstile: null,
+    minPasswordLength: 8,
+  };
+}
+
+function isConfigRequest(pathname) {
+  return pathname === '/api/config' || pathname === '/api/config/';
+}
+
 export default async function middleware(request) {
-  const apiUrl = process.env.LIBRECHAT_API_URL;
+  const requestUrl = new URL(request.url);
+  const apiUrl = resolveApiUrl();
 
   if (!apiUrl) {
+    if (isConfigRequest(requestUrl.pathname)) {
+      return Response.json(preLoginConfigFallback(requestUrl), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
     return new Response(
       JSON.stringify({
         error:
-          'LIBRECHAT_API_URL is not configured. Host the LibreChat API (Docker, Railway, etc.) and set this variable to that origin.',
+          'LIBRECHAT_API_URL is not configured. Host the LibreChat API (Docker, Railway, etc.) and set this variable to that origin, then redeploy.',
       }),
       { status: 503, headers: { 'Content-Type': 'application/json' } },
     );
   }
 
-  const requestUrl = new URL(request.url);
   const targetUrl = new URL(`${requestUrl.pathname}${requestUrl.search}`, apiUrl);
 
   const headers = new Headers(request.headers);
@@ -45,5 +93,30 @@ export default async function middleware(request) {
     init.duplex = 'half';
   }
 
-  return fetch(targetUrl, init);
+  try {
+    const upstream = await fetch(targetUrl, init);
+
+    if (!upstream.ok && isConfigRequest(requestUrl.pathname) && request.method === 'GET') {
+      return Response.json(preLoginConfigFallback(requestUrl), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    return upstream;
+  } catch {
+    if (isConfigRequest(requestUrl.pathname) && request.method === 'GET') {
+      return Response.json(preLoginConfigFallback(requestUrl), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    return new Response(
+      JSON.stringify({
+        error: 'LibreChat API is unreachable. Check LIBRECHAT_API_URL and your backend deployment.',
+      }),
+      { status: 502, headers: { 'Content-Type': 'application/json' } },
+    );
+  }
 }

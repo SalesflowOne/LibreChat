@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "installCommand": "npm install",
-  "buildCommand": "npm run build:data-provider && npm run build:client-package && cd client && npm run build",
+  "buildCommand": "node scripts/generate-proxy-config.mjs && npm run build:data-provider && npm run build:client-package && cd client && npm run build",
   "outputDirectory": "client/dist",
   "rewrites": [
     {
