@@ -1,0 +1,10 @@
+api
+e2e
+helm
+redis-config
+data-node
+meili_data*
+uploads
+logs
+*.md
+!client/**/*.md
