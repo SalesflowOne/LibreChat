@@ -26,7 +26,8 @@ function AuthLayout({
 }) {
   const localize = useLocalize();
 
-  const hasStartupConfigError = startupConfigError !== null && startupConfigError !== undefined;
+  const hasStartupConfigError =
+    startupConfigError != null && startupConfig == null && !isFetching;
   const DisplayError = () => {
     if (hasStartupConfigError) {
       return (
