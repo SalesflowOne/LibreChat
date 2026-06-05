@@ -74,6 +74,9 @@ bower_components/
 #config file
 librechat.yaml
 librechat.yml
+# This deployment commits a secret-free librechat.yaml (env-var references only)
+# so the Coolify Docker build bakes endpoint config into the image.
+!librechat.yaml
 
 # Environment
 .npmrc
