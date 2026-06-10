@@ -5,6 +5,7 @@ import {
   Brain,
   Bookmark,
   NotebookPen,
+  PlugZap,
   ScrollText,
   ArrowRightToLine,
   SlidersHorizontal,
@@ -26,6 +27,8 @@ import {
   useHasAccess,
 } from '~/hooks';
 import MCPBuilderPanel from '~/components/SidePanel/MCPBuilder/MCPBuilderPanel';
+import PipedreamConnectorsPanel from '~/components/SidePanel/Pipedream/PipedreamConnectorsPanel';
+import { usePipedreamStatusQuery } from '~/data-provider/Pipedream';
 import AgentPanelSwitch from '~/components/SidePanel/Agents/AgentPanelSwitch';
 import BookmarkPanel from '~/components/SidePanel/Bookmarks/BookmarkPanel';
 import PanelSwitch from '~/components/SidePanel/Builder/PanelSwitch';
@@ -89,6 +92,7 @@ export default function useSideNavLinks({
     permission: Permissions.CREATE,
   });
   const { availableMCPServers } = useMCPServerManager();
+  const { data: pipedreamStatus } = usePipedreamStatusQuery(hasAccessToUseMCPSettings);
 
   const { agentsConfig } = useGetAgentsConfig({ endpointsConfig });
   const { skillsEnabled } = useAgentCapabilities(agentsConfig?.capabilities);
@@ -193,6 +197,16 @@ export default function useSideNavLinks({
       });
     }
 
+    if (hasAccessToUseMCPSettings && pipedreamStatus?.enabled) {
+      links.push({
+        title: 'com_ui_pipedream_connectors',
+        label: '',
+        icon: PlugZap,
+        id: 'pipedream-connectors',
+        Component: PipedreamConnectorsPanel,
+      });
+    }
+
     if (
       (hasAccessToUseMCPSettings && availableMCPServers && availableMCPServers.length > 0) ||
       hasAccessToCreateMCP
@@ -234,6 +248,7 @@ export default function useSideNavLinks({
     availableMCPServers,
     hasAccessToUseMCPSettings,
     hasAccessToCreateMCP,
+    pipedreamStatus?.enabled,
     includeHidePanel,
     hidePanel,
   ]);

@@ -145,6 +145,17 @@ interface:
   #   create: false
   #   share: false
   #   public: false
+  # Pipedream Connect — per-user app integrations via MCP (requires env credentials above)
+  # pipedream:
+  #   enabled: true
+  #   apps:
+  #     - slug: facebook
+  #       name: Facebook
+  #     - slug: slack
+  #       name: Slack
+  #     - slug: google_sheets
+  #       name: Google Sheets
+
   # MCP Servers configuration example
   # mcpServers:
     # Controls user permissions for MCP (Model Context Protocol) server management

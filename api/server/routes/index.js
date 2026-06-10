@@ -32,9 +32,11 @@ const auth = require('./auth');
 const keys = require('./keys');
 const user = require('./user');
 const mcp = require('./mcp');
+const pipedream = require('./pipedream');
 
 module.exports = {
   mcp,
+  pipedream,
   auth,
   adminAuth,
   adminConfig,

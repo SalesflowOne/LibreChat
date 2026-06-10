@@ -10,6 +10,7 @@ import { PENDING_STALE_MS, normalizeExpiresAt } from '~/flow/manager';
 import { sanitizeUrlForLogging, isClientRejectionMessage, isOAuthServer } from './utils';
 import { withTimeout } from '~/utils/promise';
 import { MCPConnection } from './connection';
+import { preProcessPipedreamTokens } from '~/mcp/pipedream';
 import { processMCPEnv } from '~/utils';
 
 export interface ToolDiscoveryResult {
@@ -43,12 +44,24 @@ export class MCPConnectionFactory {
   protected readonly returnOnOAuth?: boolean;
   protected readonly connectionTimeout?: number;
 
+  private static async preprocessBasicOptions(
+    basic: t.BasicConnectionOptions,
+  ): Promise<t.BasicConnectionOptions> {
+    if (basic.dbSourced) {
+      return basic;
+    }
+
+    const serverConfig = await preProcessPipedreamTokens(basic.serverConfig);
+    return { ...basic, serverConfig };
+  }
+
   /** Creates a new MCP connection with optional OAuth support */
   static async create(
     basic: t.BasicConnectionOptions,
     oauth?: t.OAuthConnectionOptions | t.UserConnectionContext,
   ): Promise<MCPConnection> {
-    const factory = new this(basic, oauth);
+    const processedBasic = await MCPConnectionFactory.preprocessBasicOptions(basic);
+    const factory = new this(processedBasic, oauth);
     return factory.createConnection();
   }
 
@@ -61,11 +74,12 @@ export class MCPConnectionFactory {
     basic: t.BasicConnectionOptions,
     options?: Omit<t.OAuthConnectionOptions, 'returnOnOAuth'> | t.UserConnectionContext,
   ): Promise<ToolDiscoveryResult> {
+    const processedBasic = await MCPConnectionFactory.preprocessBasicOptions(basic);
     if (options != null && 'useOAuth' in options) {
-      const factory = new this(basic, { ...options, returnOnOAuth: true });
+      const factory = new this(processedBasic, { ...options, returnOnOAuth: true });
       return factory.discoverToolsInternal();
     }
-    const factory = new this(basic, options);
+    const factory = new this(processedBasic, options);
     return factory.discoverToolsInternal();
   }
 
