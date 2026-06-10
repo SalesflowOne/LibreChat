@@ -64,6 +64,11 @@ export enum QueryKeys {
   mcpServer = 'mcpServer',
   pipedreamStatus = 'pipedreamStatus',
   pipedreamAccounts = 'pipedreamAccounts',
+  artifacts = 'artifacts',
+  artifact = 'artifact',
+  spaces = 'spaces',
+  agentRuns = 'agentRuns',
+  agentRun = 'agentRun',
   /* Active Jobs */
   activeJobs = 'activeJobs',
   /* Agent API Keys */

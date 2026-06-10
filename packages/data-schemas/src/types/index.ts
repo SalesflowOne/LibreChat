@@ -38,3 +38,7 @@ export * from './admin';
 export * from './web';
 /* MCP Servers */
 export * from './mcp';
+/* AgentOps */
+export * from './artifact';
+export * from './space';
+export * from './agentRun';

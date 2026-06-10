@@ -85,7 +85,9 @@ describe('Pipedream config', () => {
 
     expect(getPipedreamServerName('facebook')).toBe('pipedream-facebook');
     expect(config.headers?.['x-pd-app-slug']).toBe('facebook');
-    expect(config.headers?.['x-pd-external-user-id']).toBe('{{LIBRECHAT_USER_ID}}');
+    expect(config.headers?.['x-pd-external-user-id']).toBe(
+      '{{LIBRECHAT_USER_TENANTID}}:{{LIBRECHAT_USER_ID}}',
+    );
     expect(config.startup).toBe(false);
   });
 

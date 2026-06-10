@@ -21,13 +21,22 @@ import ShareRoute from './ShareRoute';
 import ChatRoute from './ChatRoute';
 import Search from './Search';
 import Root from './Root';
+import AgentOpsHome from './AgentOpsHome';
+import AgentOpsArtifacts from './AgentOpsArtifacts';
+import AgentOpsSpaces from './AgentOpsSpaces';
+import AgentOpsConnectors from './AgentOpsConnectors';
+import ClerkSignInRedirect from '~/components/Auth/Clerk/ClerkSignInRedirect';
+import ClerkAuthGate from '~/components/Auth/Clerk/ClerkAuthGate';
+import { isClerkEnabled } from '~/components/Auth/Clerk/ClerkRoot';
 
 const AuthLayout = () => (
   <AuthContextProvider>
-    <WithRum>
-      <Outlet />
-    </WithRum>
-    <ApiErrorWatcher />
+    <ClerkAuthGate>
+      <WithRum>
+        <Outlet />
+      </WithRum>
+      <ApiErrorWatcher />
+    </ClerkAuthGate>
   </AuthContextProvider>
 );
 
@@ -99,7 +108,7 @@ export const router = createBrowserRouter(
           children: [
             {
               path: 'login',
-              element: <Login />,
+              element: isClerkEnabled() ? <ClerkSignInRedirect /> : <Login />,
             },
             {
               path: 'login/2fa',
@@ -114,7 +123,23 @@ export const router = createBrowserRouter(
           children: [
             {
               index: true,
-              element: <Navigate to="/c/new" replace={true} />,
+              element: <Navigate to="/home" replace={true} />,
+            },
+            {
+              path: 'home',
+              element: <AgentOpsHome />,
+            },
+            {
+              path: 'artifacts',
+              element: <AgentOpsArtifacts />,
+            },
+            {
+              path: 'spaces',
+              element: <AgentOpsSpaces />,
+            },
+            {
+              path: 'connectors',
+              element: <AgentOpsConnectors />,
             },
             {
               path: 'c/:conversationId?',

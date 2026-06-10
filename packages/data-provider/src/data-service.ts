@@ -1,4 +1,4 @@
-import type { AxiosResponse } from 'axios';
+import axios, { type AxiosResponse } from 'axios';
 import type * as t from './types';
 import * as endpoints from './api-endpoints';
 import * as a from './types/assistants';
@@ -682,6 +682,74 @@ export const createPipedreamConnectToken = async (
   data: pd.PipedreamConnectTokenRequest,
 ): Promise<pd.PipedreamConnectTokenResponse> => {
   return request.post(endpoints.pipedream.connectToken(), data);
+};
+
+/**
+ * Clerk auth exchange
+ */
+export const exchangeClerkSession = async (
+  clerkToken: string,
+): Promise<import('./types/agentops').ClerkExchangeResponse> => {
+  const response = await axios.post<import('./types/agentops').ClerkExchangeResponse>(
+    endpoints.clerk.exchange(),
+    {},
+    {
+      headers: {
+        Authorization: `Bearer ${clerkToken}`,
+        'Content-Type': 'application/json',
+      },
+    },
+  );
+  return response.data;
+};
+
+/**
+ * AgentOps artifacts
+ */
+export const listArtifacts = async (): Promise<
+  import('./types/agentops').ArtifactsListResponse
+> => {
+  return request.get(endpoints.artifacts.list());
+};
+
+export const createArtifact = async (
+  data: import('./types/agentops').CreateArtifactRequest,
+): Promise<import('./types/agentops').ArtifactResponse> => {
+  return request.post(endpoints.artifacts.create(), data);
+};
+
+export const getArtifact = async (
+  artifactId: string,
+): Promise<import('./types/agentops').ArtifactResponse> => {
+  return request.get(endpoints.artifacts.byId(artifactId));
+};
+
+export const publishArtifactPreview = async (
+  artifactId: string,
+): Promise<import('./types/agentops').ArtifactResponse & { previewUrl?: string }> => {
+  return request.post(endpoints.artifacts.preview(artifactId));
+};
+
+/**
+ * AgentOps spaces
+ */
+export const listSpaces = async (): Promise<import('./types/agentops').SpacesListResponse> => {
+  return request.get(endpoints.spaces.list());
+};
+
+export const deploySpace = async (
+  data: import('./types/agentops').DeploySpaceRequest,
+): Promise<import('./types/agentops').DeploySpaceResponse> => {
+  return request.post(endpoints.spaces.deploy(), data);
+};
+
+/**
+ * AgentOps runs
+ */
+export const listAgentRuns = async (): Promise<
+  import('./types/agentops').AgentRunsListResponse
+> => {
+  return request.get(endpoints.agentops.runs());
 };
 
 /**

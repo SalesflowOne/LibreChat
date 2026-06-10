@@ -92,6 +92,11 @@ const userSchema = new Schema<IUser>(
     appleId: {
       type: String,
     },
+    clerkId: {
+      type: String,
+      sparse: true,
+      index: true,
+    },
     plugins: {
       type: Array,
     },

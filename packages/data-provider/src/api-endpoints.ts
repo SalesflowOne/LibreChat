@@ -217,6 +217,29 @@ export const pipedream = {
   connectToken: () => `${BASE_URL}/api/pipedream/connect-token`,
 };
 
+export const clerk = {
+  exchange: () => `${BASE_URL}/api/auth/clerk/exchange`,
+};
+
+export const artifacts = {
+  list: () => `${BASE_URL}/api/artifacts`,
+  create: () => `${BASE_URL}/api/artifacts`,
+  byId: (artifactId: string) => `${BASE_URL}/api/artifacts/${encodeURIComponent(artifactId)}`,
+  preview: (artifactId: string) =>
+    `${BASE_URL}/api/artifacts/${encodeURIComponent(artifactId)}/preview`,
+};
+
+export const spaces = {
+  list: () => `${BASE_URL}/api/spaces`,
+  deploy: () => `${BASE_URL}/api/spaces/deploy`,
+  byId: (spaceId: string) => `${BASE_URL}/api/spaces/${encodeURIComponent(spaceId)}`,
+};
+
+export const agentops = {
+  runs: () => `${BASE_URL}/api/agentops/runs`,
+  run: (runId: string) => `${BASE_URL}/api/agentops/runs/${encodeURIComponent(runId)}`,
+};
+
 export const actionOAuthBind = (actionId: string) =>
   `${BASE_URL}/api/actions/${actionId}/oauth/bind`;
 

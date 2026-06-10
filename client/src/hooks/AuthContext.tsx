@@ -30,6 +30,8 @@ import { TAuthConfig, TUserContext, TAuthContext, TResError } from '~/common';
 import { SESSION_KEY, isSafeRedirect, getPostLoginRedirect } from '~/utils';
 import useTimeout from './useTimeout';
 import store from '~/store';
+import { isClerkEnabled } from '~/components/Auth/Clerk/ClerkRoot';
+import { useClerkAuthBridge } from '~/hooks/useClerkAuthBridge';
 
 const AuthContext = (import.meta.hot?.data?.__AuthContext ??
   createContext<TAuthContext | undefined>(undefined)) as React.Context<TAuthContext | undefined>;
@@ -171,6 +173,24 @@ const AuthContextProvider = ({
     loginUser.mutate(data);
   };
 
+  useClerkAuthBridge({
+    onAuthenticated: (nextToken, nextUser) => {
+      setError(undefined);
+      setUserContext({
+        token: nextToken,
+        isAuthenticated: true,
+        user: nextUser as t.TUser,
+      });
+    },
+    onSignedOut: () => {
+      setUserContext({
+        token: undefined,
+        isAuthenticated: false,
+        user: undefined,
+      });
+    },
+  });
+
   const silentRefresh = useCallback(() => {
     if (authConfig?.test === true) {
       console.log('Test mode. Skipping silent refresh.');
@@ -234,7 +254,7 @@ const AuthContextProvider = ({
     if (error != null && error && isAuthenticated) {
       doSetError(undefined);
     }
-    if (token == null || !token || !isAuthenticated) {
+    if (!isClerkEnabled() && (token == null || !token || !isAuthenticated)) {
       silentRefresh();
     }
   }, [

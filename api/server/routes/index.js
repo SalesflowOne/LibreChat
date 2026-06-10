@@ -33,10 +33,18 @@ const keys = require('./keys');
 const user = require('./user');
 const mcp = require('./mcp');
 const pipedream = require('./pipedream');
+const clerk = require('./clerk');
+const artifacts = require('./artifacts');
+const spaces = require('./spaces');
+const agentops = require('./agentops');
 
 module.exports = {
   mcp,
   pipedream,
+  clerk,
+  artifacts,
+  spaces,
+  agentops,
   auth,
   adminAuth,
   adminConfig,

@@ -17,6 +17,7 @@ const {
 const { processFileCitations } = require('~/server/services/Files/Citations');
 const { processCodeOutput, runPreviewFinalize } = require('~/server/services/Files/Code/process');
 const { saveBase64Image } = require('~/server/services/Files/process');
+const { handleAgentOpsCodeFile } = require('~/server/services/AgentOps/hooks');
 
 class ModelEndHandler {
   /**
@@ -718,6 +719,13 @@ function createToolEndCallback({ req, res, artifactPromises, streamId = null }) 
                 toolCallId,
               });
             },
+          });
+          await handleAgentOpsCodeFile({
+            req,
+            metadata,
+            output,
+            fileMetadata,
+            file,
           });
           return fileMetadata;
         })().catch((error) => {

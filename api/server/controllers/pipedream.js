@@ -3,6 +3,7 @@ const {
   resolvePipedreamRuntimeConfig,
   listPipedreamUserAccounts,
   createPipedreamConnectToken,
+  getPipedreamExternalUserId,
 } = require('@librechat/api');
 const { getAppConfig } = require('~/server/services/Config');
 
@@ -38,7 +39,11 @@ const getPipedreamAccountsController = async (req, res) => {
     }
 
     const appSlug = typeof req.query.app === 'string' ? req.query.app : undefined;
-    const accounts = await listPipedreamUserAccounts(req.user.id, runtime, appSlug);
+    const accounts = await listPipedreamUserAccounts(
+      getPipedreamExternalUserId(req.user),
+      runtime,
+      appSlug,
+    );
     return res.status(200).json({ accounts });
   } catch (error) {
     logger.error('[Pipedream] Failed to list accounts', error);
@@ -65,7 +70,7 @@ const createPipedreamConnectTokenController = async (req, res) => {
 
     const domainClient = process.env.DOMAIN_CLIENT || 'http://localhost:3090';
     const token = await createPipedreamConnectToken({
-      externalUserId: req.user.id,
+      externalUserId: getPipedreamExternalUserId(req.user),
       config: runtime,
       appSlug,
       allowedOrigins: [domainClient.replace(/\/$/, '')],

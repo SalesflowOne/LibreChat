@@ -17,4 +17,5 @@ export * from './roles';
 export * from './tags';
 export * from './MCP';
 export * from './Pipedream';
+export * from './AgentOps';
 export * from './SSE';

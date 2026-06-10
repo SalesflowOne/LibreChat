@@ -4,8 +4,10 @@ import {
   Bot,
   Brain,
   Bookmark,
+  Boxes,
   NotebookPen,
   PlugZap,
+  Rocket,
   ScrollText,
   ArrowRightToLine,
   SlidersHorizontal,
@@ -27,7 +29,9 @@ import {
   useHasAccess,
 } from '~/hooks';
 import MCPBuilderPanel from '~/components/SidePanel/MCPBuilder/MCPBuilderPanel';
-import PipedreamConnectorsPanel from '~/components/SidePanel/Pipedream/PipedreamConnectorsPanel';
+import ConnectorHubPanel from '~/components/AgentOps/ConnectorHubPanel';
+import ArtifactGalleryPanel from '~/components/AgentOps/ArtifactGalleryPanel';
+import SpacesPanel from '~/components/AgentOps/SpacesPanel';
 import { usePipedreamStatusQuery } from '~/data-provider/Pipedream';
 import AgentPanelSwitch from '~/components/SidePanel/Agents/AgentPanelSwitch';
 import BookmarkPanel from '~/components/SidePanel/Bookmarks/BookmarkPanel';
@@ -199,13 +203,29 @@ export default function useSideNavLinks({
 
     if (hasAccessToUseMCPSettings && pipedreamStatus?.enabled) {
       links.push({
-        title: 'com_ui_pipedream_connectors',
+        title: 'com_ui_agentops_connectors',
         label: '',
         icon: PlugZap,
-        id: 'pipedream-connectors',
-        Component: PipedreamConnectorsPanel,
+        id: 'connector-hub',
+        Component: ConnectorHubPanel,
       });
     }
+
+    links.push({
+      title: 'com_ui_agentops_artifacts',
+      label: '',
+      icon: Boxes,
+      id: 'artifacts-gallery',
+      Component: ArtifactGalleryPanel,
+    });
+
+    links.push({
+      title: 'com_ui_agentops_spaces',
+      label: '',
+      icon: Rocket,
+      id: 'spaces',
+      Component: SpacesPanel,
+    });
 
     if (
       (hasAccessToUseMCPSettings && availableMCPServers && availableMCPServers.length > 0) ||

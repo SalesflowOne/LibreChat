@@ -27,6 +27,7 @@ const {
   createToolEndCallback,
   getDefaultHandlers,
 } = require('~/server/controllers/agents/callbacks');
+const { ensureAgentRunForRequest } = require('~/server/services/AgentOps/hooks');
 const { loadAgentTools, loadToolsForExecution } = require('~/server/services/ToolService');
 const { filterFilesByAgentAccess } = require('~/server/services/Files/permissions');
 const {
@@ -127,6 +128,12 @@ const initializeClient = async ({ req, res, signal, endpointOption }) => {
   /** @type {ArtifactPromises} */
   const artifactPromises = [];
   const { contentParts, aggregateContent } = createContentAggregator();
+  if (req.user?.tenantId) {
+    await ensureAgentRunForRequest(req, {
+      thread_id: req.body?.conversationId,
+      agent_id: endpointOption?.agent_id,
+    });
+  }
   const toolEndCallback = createToolEndCallback({ req, res, artifactPromises, streamId });
 
   /** Query accessible skill IDs once per run (shared across all agents).
