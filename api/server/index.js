@@ -187,6 +187,7 @@ const startServer = async () => {
   app.use('/oauth', preAuthTenantMiddleware, routes.oauth);
   /* API Endpoints */
   app.use('/api/auth', preAuthTenantMiddleware, routes.auth);
+  app.use('/api/auth/clerk', preAuthTenantMiddleware, routes.clerk);
   app.use('/api/admin', routes.adminAuth);
   app.use('/api/admin/config', routes.adminConfig);
   app.use('/api/admin/grants', routes.adminGrants);
@@ -221,6 +222,9 @@ const startServer = async () => {
   app.use('/api/tags', routes.tags);
   app.use('/api/mcp', routes.mcp);
   app.use('/api/pipedream', routes.pipedream);
+  app.use('/api/artifacts', routes.artifacts);
+  app.use('/api/spaces', routes.spaces);
+  app.use('/api/agentops', routes.agentops);
 
   app.use('/metrics', metricsRouter);
 

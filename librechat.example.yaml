@@ -155,6 +155,14 @@ interface:
   #       name: Slack
   #     - slug: google_sheets
   #       name: Google Sheets
+  #     - slug: gmail
+  #       name: Gmail
+  #     - slug: hubspot
+  #       name: HubSpot
+  #     - slug: notion
+  #       name: Notion
+  #     - slug: airtable
+  #       name: Airtable
 
   # MCP Servers configuration example
   # mcpServers:

@@ -104,7 +104,7 @@ export function buildPipedreamMcpServerConfig(app: PipedreamAppConfig): MCPOptio
       Authorization: `Bearer ${PIPEDREAM_ACCESS_TOKEN_PLACEHOLDER}`,
       'x-pd-project-id': '${PIPEDREAM_PROJECT_ID}',
       'x-pd-environment': '${PIPEDREAM_ENVIRONMENT}',
-      'x-pd-external-user-id': '{{LIBRECHAT_USER_ID}}',
+      'x-pd-external-user-id': '{{LIBRECHAT_USER_TENANTID}}:{{LIBRECHAT_USER_ID}}',
       'x-pd-app-slug': app.slug,
     },
   };

@@ -1,11 +1,12 @@
 import { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
-import { MessagesSquare } from 'lucide-react';
+import { LayoutDashboard, MessagesSquare } from 'lucide-react';
 import { useUserKeyQuery } from 'librechat-data-provider/react-query';
 import { getConfigDefaults, getEndpointField } from 'librechat-data-provider';
 import type { TEndpointsConfig } from 'librechat-data-provider';
 import type { NavLink } from '~/common';
 import ConversationsSection from '~/components/UnifiedSidebar/ConversationsSection';
+import CommandCenter from '~/components/AgentOps/CommandCenter';
 import { useGetEndpointsQuery, useGetStartupConfig } from '~/data-provider';
 import useSideNavLinks from '~/hooks/Nav/useSideNavLinks';
 import store from '~/store';
@@ -50,6 +51,14 @@ export default function useUnifiedSidebarLinks() {
   });
 
   const links = useMemo(() => {
+    const homeLink: NavLink = {
+      title: 'com_ui_agentops_command_center',
+      label: '',
+      icon: LayoutDashboard,
+      id: 'command-center',
+      Component: CommandCenter,
+    };
+
     const conversationLink: NavLink = {
       title: 'com_ui_chat_history',
       label: '',
@@ -58,7 +67,7 @@ export default function useUnifiedSidebarLinks() {
       Component: ConversationsSection,
     };
 
-    return [conversationLink, ...sideNavLinks];
+    return [homeLink, conversationLink, ...sideNavLinks];
   }, [sideNavLinks]);
 
   return links;

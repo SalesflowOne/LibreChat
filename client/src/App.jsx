@@ -13,6 +13,7 @@ import { getThemeFromEnv } from './utils/getThemeFromEnv';
 import { initializeFontSize } from '~/store/fontSize';
 import { LiveAnnouncer } from '~/a11y';
 import { router } from './routes';
+import ClerkRoot from '~/components/Auth/Clerk/ClerkRoot';
 
 const App = () => {
   const { setError } = useApiErrorBoundary();
@@ -61,7 +62,9 @@ const App = () => {
             <RadixToast.Provider>
               <ToastProvider>
                 <DndProvider backend={HTML5Backend}>
-                  <RouterProvider router={router} />
+                  <ClerkRoot>
+                    <RouterProvider router={router} />
+                  </ClerkRoot>
                   <WakeLockManager />
                   <ReactQueryDevtools initialIsOpen={false} position="top-right" />
                   <Toast />

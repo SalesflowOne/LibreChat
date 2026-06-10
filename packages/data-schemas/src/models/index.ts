@@ -30,6 +30,9 @@ import { createAclEntryModel } from './aclEntry';
 import { createSystemGrantModel } from './systemGrant';
 import { createGroupModel } from './group';
 import { createConfigModel } from './config';
+import { createArtifactModel } from './artifact';
+import { createSpaceModel } from './space';
+import { createAgentRunModel } from './agentRun';
 
 /**
  * Creates all database models for all collections
@@ -68,5 +71,8 @@ export function createModels(mongoose: typeof import('mongoose')) {
     SystemGrant: createSystemGrantModel(mongoose),
     Group: createGroupModel(mongoose),
     Config: createConfigModel(mongoose),
+    Artifact: createArtifactModel(mongoose),
+    Space: createSpaceModel(mongoose),
+    AgentRun: createAgentRunModel(mongoose),
   };
 }
