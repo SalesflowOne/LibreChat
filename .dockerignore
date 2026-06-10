@@ -10,6 +10,9 @@
 data-node
 meili_data*
 librechat*
+# Keep the committed runtime config in the image (endpoints, interface, etc.).
+# Must come after `librechat*` so the negation wins.
+!librechat.yaml
 Dockerfile*
 docs
 
