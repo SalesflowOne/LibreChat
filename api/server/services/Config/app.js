@@ -1,6 +1,11 @@
 const { CacheKeys } = require('librechat-data-provider');
 const { AppService, logger } = require('@librechat/data-schemas');
-const { createAppConfigService, clearMcpConfigCache } = require('@librechat/api');
+const {
+  createAppConfigService,
+  clearMcpConfigCache,
+  mergePipedreamMcpServers,
+  mergePipedreamMcpSettings,
+} = require('@librechat/api');
 const { setCachedTools, invalidateCachedTools } = require('./getCachedTools');
 const { loadAndFormatTools } = require('~/server/services/start/tools');
 const loadCustomConfig = require('./loadCustomConfig');
@@ -11,6 +16,12 @@ const db = require('~/models');
 const loadBaseConfig = async () => {
   /** @type {TCustomConfig} */
   const config = (await loadCustomConfig()) ?? {};
+
+  if (config.pipedream) {
+    config.mcpServers = mergePipedreamMcpServers(config.mcpServers, config.pipedream);
+    config.mcpSettings = mergePipedreamMcpSettings(config.mcpSettings, config.pipedream);
+  }
+
   /** @type {Record<string, FunctionTool>} */
   const systemTools = loadAndFormatTools({
     adminFilter: config.filteredTools,

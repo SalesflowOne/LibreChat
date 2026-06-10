@@ -51,16 +51,27 @@ export default function ToolCall({
     }
   }, [autoExpand, hasOutput]);
 
+  const resolvedAuthUrl = useMemo(() => {
+    if (auth) {
+      return auth;
+    }
+    if (typeof output === 'string') {
+      const match = output.match(/https:\/\/pipedream\.com\/_static\/connect\.html[^\s"'<>]*/);
+      return match?.[0] ?? null;
+    }
+    return null;
+  }, [auth, output]);
+
   const parsedAuthUrl = useMemo(() => {
-    if (!auth) {
+    if (!resolvedAuthUrl) {
       return null;
     }
     try {
-      return new URL(auth);
+      return new URL(resolvedAuthUrl);
     } catch {
       return null;
     }
-  }, [auth]);
+  }, [resolvedAuthUrl]);
 
   const { function_name, domain, isMCPToolCall, mcpServerName } = useMemo(() => {
     if (typeof name !== 'string') {
@@ -117,11 +128,11 @@ export default function ToolCall({
   }, [parsedAuthUrl, isMCPToolCall]);
 
   const handleOAuthClick = useCallback(async () => {
-    if (!auth) {
+    if (!resolvedAuthUrl) {
       return;
     }
     try {
-      if (isMCPToolCall && mcpServerName) {
+      if (isMCPToolCall && mcpServerName && !resolvedAuthUrl.includes('pipedream.com/_static/connect.html')) {
         await dataService.bindMCPOAuth(mcpServerName);
       } else if (actionId) {
         await dataService.bindActionOAuth(actionId);
@@ -129,8 +140,8 @@ export default function ToolCall({
     } catch (e) {
       logger.error('Failed to bind OAuth CSRF cookie', e);
     }
-    window.open(auth, '_blank', 'noopener,noreferrer');
-  }, [auth, isMCPToolCall, mcpServerName, actionId]);
+    window.open(resolvedAuthUrl, '_blank', 'noopener,noreferrer');
+  }, [resolvedAuthUrl, isMCPToolCall, mcpServerName, actionId]);
 
   const hasError = typeof output === 'string' && isError(output);
   const cancelled = !isSubmitting && initialProgress < 1 && !hasError;
@@ -238,7 +249,7 @@ export default function ToolCall({
           )}
         </div>
       </div>
-      {auth != null && auth && progress < 1 && !showCancelled && (
+      {resolvedAuthUrl != null && resolvedAuthUrl && !showCancelled && (
         <div className="flex w-full flex-col gap-2.5">
           <div className="mb-1 mt-2">
             <Button

@@ -1388,6 +1388,21 @@ export const configSchema = z.object({
   includedTools: z.array(z.string()).optional(),
   filteredTools: z.array(z.string()).optional(),
   mcpServers: MCPServersSchema.optional(),
+  pipedream: z
+    .object({
+      enabled: z.boolean().optional(),
+      apps: z
+        .array(
+          z.object({
+            slug: z.string().min(1),
+            name: z.string().min(1),
+            iconUrl: z.string().optional(),
+            description: z.string().optional(),
+          }),
+        )
+        .optional(),
+    })
+    .optional(),
   mcpSettings: z
     .object({
       allowedDomains: z.array(z.string()).optional(),

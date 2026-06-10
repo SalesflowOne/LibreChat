@@ -8,6 +8,7 @@ import * as q from './types/queries';
 import * as f from './types/files';
 import * as sk from './types/skills';
 import * as mcp from './types/mcpServers';
+import type * as pd from './types/pipedream';
 import * as config from './config';
 import request from './request';
 import * as s from './schemas';
@@ -662,6 +663,25 @@ export const updateMCPServer = async (
  */
 export const deleteMCPServer = async (serverName: string): Promise<{ success: boolean }> => {
   return request.delete(endpoints.mcpServer(serverName));
+};
+
+/**
+ * Pipedream Connect
+ */
+export const getPipedreamStatus = async (): Promise<pd.PipedreamStatusResponse> => {
+  return request.get(endpoints.pipedream.status());
+};
+
+export const getPipedreamAccounts = async (
+  appSlug?: string,
+): Promise<pd.PipedreamAccountsResponse> => {
+  return request.get(endpoints.pipedream.accounts(appSlug));
+};
+
+export const createPipedreamConnectToken = async (
+  data: pd.PipedreamConnectTokenRequest,
+): Promise<pd.PipedreamConnectTokenResponse> => {
+  return request.post(endpoints.pipedream.connectToken(), data);
 };
 
 /**

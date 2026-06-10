@@ -210,6 +210,13 @@ export const cancelMCPOAuth = (serverName: string) => {
 
 export const mcpOAuthBind = (serverName: string) => `${BASE_URL}/api/mcp/${serverName}/oauth/bind`;
 
+export const pipedream = {
+  status: () => `${BASE_URL}/api/pipedream/status`,
+  accounts: (appSlug?: string) =>
+    `${BASE_URL}/api/pipedream/accounts${appSlug ? `?app=${encodeURIComponent(appSlug)}` : ''}`,
+  connectToken: () => `${BASE_URL}/api/pipedream/connect-token`,
+};
+
 export const actionOAuthBind = (actionId: string) =>
   `${BASE_URL}/api/actions/${actionId}/oauth/bind`;
 

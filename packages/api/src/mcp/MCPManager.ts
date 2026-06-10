@@ -14,6 +14,7 @@ import { MCPServersRegistry } from './registry/MCPServersRegistry';
 import { UserConnectionManager } from './UserConnectionManager';
 import { ConnectionsRepository } from './ConnectionsRepository';
 import { MCPConnectionFactory } from './MCPConnectionFactory';
+import { preProcessPipedreamTokens } from '~/mcp/pipedream';
 import { preProcessGraphTokens } from '~/utils/graph';
 import { formatToolContent } from './parsers';
 import { MCPConnection } from './connection';
@@ -331,10 +332,13 @@ Please follow these instructions when using tools from the respective MCP server
       }
       const isDbSourced = isUserSourced(rawConfig);
 
-      /** Pre-process Graph token placeholders (async) before the synchronous processMCPEnv pass */
-      const graphProcessedConfig = isDbSourced
+      /** Pre-process async token placeholders before the synchronous processMCPEnv pass */
+      const pipedreamProcessedConfig = isDbSourced
         ? (rawConfig as t.MCPOptions)
-        : await preProcessGraphTokens(rawConfig as t.MCPOptions, {
+        : await preProcessPipedreamTokens(rawConfig as t.MCPOptions);
+      const graphProcessedConfig = isDbSourced
+        ? pipedreamProcessedConfig
+        : await preProcessGraphTokens(pipedreamProcessedConfig, {
             user,
             graphTokenResolver,
             scopes: process.env.GRAPH_API_SCOPES,
