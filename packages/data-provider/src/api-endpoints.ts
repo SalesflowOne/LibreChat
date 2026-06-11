@@ -217,8 +217,8 @@ export const pipedream = {
   connectToken: () => `${BASE_URL}/api/pipedream/connect-token`,
 };
 
-export const clerk = {
-  exchange: () => `${BASE_URL}/api/auth/workspace/exchange`,
+export const supabaseAuth = {
+  exchange: () => `${BASE_URL}/api/auth/supabase/exchange`,
 };
 
 export const artifacts = {

@@ -8,6 +8,7 @@ import type { TRequestPasswordReset, TRequestPasswordResetResponse } from 'libre
 import type { TLoginLayoutContext } from '~/common';
 import type { FC } from 'react';
 import { useLocalize } from '~/hooks';
+import { isSupabaseAuthEnabled, resetPassword } from '~/lib/auth';
 
 const BodyTextWrapper: FC<{ children: ReactNode }> = ({ children }) => {
   return (
@@ -49,6 +50,20 @@ function RequestPasswordReset() {
   const { isLoading } = requestPasswordReset;
 
   const onSubmit = (data: TRequestPasswordReset) => {
+    if (isSupabaseAuthEnabled()) {
+      void (async () => {
+        try {
+          await resetPassword(data.email);
+          setHeaderText('com_auth_reset_password_link_sent');
+          setBodyText(<ResetPasswordBodyText />);
+        } catch {
+          setHeaderText('com_auth_reset_password_link_sent');
+          setBodyText(<ResetPasswordBodyText />);
+        }
+      })();
+      return;
+    }
+
     requestPasswordReset.mutate(data, {
       onSuccess: (data: TRequestPasswordResetResponse) => {
         if (data.link && !startupConfig?.emailEnabled) {

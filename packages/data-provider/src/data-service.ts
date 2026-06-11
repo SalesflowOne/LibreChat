@@ -685,17 +685,17 @@ export const createPipedreamConnectToken = async (
 };
 
 /**
- * Clerk auth exchange
+ * Supabase auth exchange
  */
-export const exchangeClerkSession = async (
-  clerkToken: string,
-): Promise<import('./types/agentops').ClerkExchangeResponse> => {
-  const response = await axios.post<import('./types/agentops').ClerkExchangeResponse>(
-    endpoints.clerk.exchange(),
+export const exchangeSupabaseSession = async (
+  accessToken: string,
+): Promise<import('./types/agentops').AuthExchangeResponse> => {
+  const response = await axios.post<import('./types/agentops').AuthExchangeResponse>(
+    endpoints.supabaseAuth.exchange(),
     {},
     {
       headers: {
-        Authorization: `Bearer ${clerkToken}`,
+        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
     },

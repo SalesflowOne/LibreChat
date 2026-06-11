@@ -1,79 +1,69 @@
 import { SystemRoles } from 'librechat-data-provider';
 import { logger } from '@librechat/data-schemas';
 import type { IUser } from '@librechat/data-schemas';
-import type { ClerkExchangeResult, ClerkTokenClaims } from './types';
-import { resolveClerkOrganizationId } from './org';
-import { verifyClerkToken } from './verify';
+import type { SupabaseExchangeResult, SupabaseUserClaims } from './types';
+import { verifySupabaseAccessToken } from './verify';
 
-export interface ClerkUserStore {
+export interface SupabaseUserStore {
   findUser: (filter: Record<string, string>) => Promise<IUser | null>;
   createUser: (data: Record<string, unknown>) => Promise<IUser>;
   updateUser: (userId: string, data: Record<string, unknown>) => Promise<IUser | null>;
 }
 
-export interface ClerkTokenIssuer {
+export interface SupabaseTokenIssuer {
   issueTokens: (user: IUser) => Promise<{ token: string; refreshToken: string }>;
 }
 
-function resolveEmail(claims: ClerkTokenClaims): string {
+function resolveEmail(claims: SupabaseUserClaims): string {
   if (claims.email?.trim()) {
     return claims.email.trim().toLowerCase();
   }
-  return `${claims.sub}@clerk.artemiis.one`;
+  return `${claims.sub}@users.supabase.local`;
 }
 
-function resolveName(claims: ClerkTokenClaims, email: string): string {
-  if (claims.name?.trim()) {
-    return claims.name.trim();
-  }
-  return email.split('@')[0] ?? 'Operator';
+function resolveName(claims: SupabaseUserClaims, email: string): string {
+  const localPart = email.split('@')[0];
+  return localPart || 'User';
 }
 
-export async function exchangeClerkSession({
-  clerkToken,
+export async function exchangeSupabaseSession({
+  accessToken,
   userStore,
   tokenIssuer,
 }: {
-  clerkToken: string;
-  userStore: ClerkUserStore;
-  tokenIssuer: ClerkTokenIssuer;
-}): Promise<ClerkExchangeResult | null> {
-  const claims = await verifyClerkToken(clerkToken);
+  accessToken: string;
+  userStore: SupabaseUserStore;
+  tokenIssuer: SupabaseTokenIssuer;
+}): Promise<SupabaseExchangeResult | null> {
+  const claims = await verifySupabaseAccessToken(accessToken);
   if (!claims) {
     return null;
   }
 
   const email = resolveEmail(claims);
-  const tenantId = await resolveClerkOrganizationId(claims);
-
-  if (!tenantId) {
-    logger.warn('[Clerk] Exchange rejected: user has no active organization');
-    return null;
-  }
+  const tenantId = claims.sub;
 
   let user =
-    (await userStore.findUser({ clerkId: claims.sub })) ??
+    (await userStore.findUser({ supabaseId: claims.sub })) ??
     (await userStore.findUser({ email }));
 
   if (!user) {
     user = await userStore.createUser({
       email,
       name: resolveName(claims, email),
-      provider: 'clerk',
+      provider: 'supabase',
       emailVerified: true,
-      avatar: claims.image_url,
-      clerkId: claims.sub,
+      supabaseId: claims.sub,
       tenantId,
       role: SystemRoles.USER,
     });
-  } else if (user.tenantId !== tenantId || user.clerkId !== claims.sub) {
+  } else if (user.supabaseId !== claims.sub || user.tenantId !== tenantId) {
     user =
       (await userStore.updateUser(String(user._id ?? user.id), {
-        clerkId: claims.sub,
+        supabaseId: claims.sub,
         tenantId,
-        provider: 'clerk',
+        provider: 'supabase',
         emailVerified: true,
-        avatar: claims.image_url ?? user.avatar,
         name: user.name ?? resolveName(claims, email),
       })) ?? user;
   }

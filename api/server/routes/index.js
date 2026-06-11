@@ -33,7 +33,7 @@ const keys = require('./keys');
 const user = require('./user');
 const mcp = require('./mcp');
 const pipedream = require('./pipedream');
-const clerk = require('./clerk');
+const supabase = require('./supabase');
 const artifacts = require('./artifacts');
 const spaces = require('./spaces');
 const agentops = require('./agentops');
@@ -41,7 +41,7 @@ const agentops = require('./agentops');
 module.exports = {
   mcp,
   pipedream,
-  clerk,
+  supabase,
   artifacts,
   spaces,
   agentops,

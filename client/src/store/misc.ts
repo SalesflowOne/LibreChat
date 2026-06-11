@@ -52,15 +52,15 @@ const queriesEnabled = atom<boolean>({
   default: true,
 });
 
-export type ClerkBridgeState = 'idle' | 'loading' | 'needs_org' | 'error' | 'ready';
+export type AuthBridgeState = 'idle' | 'loading' | 'error' | 'ready';
 
-const clerkBridgeState = atom<ClerkBridgeState>({
-  key: 'clerkBridgeState',
+const authBridgeState = atom<AuthBridgeState>({
+  key: 'authBridgeState',
   default: 'idle',
 });
 
-const clerkBridgeError = atom<string | null>({
-  key: 'clerkBridgeError',
+const authBridgeError = atom<string | null>({
+  key: 'authBridgeError',
   default: null,
 });
 
@@ -81,8 +81,8 @@ export default {
   messageAttachmentsMap,
   conversationAttachmentsSelector,
   queriesEnabled,
-  clerkBridgeState,
-  clerkBridgeError,
+  authBridgeState,
+  authBridgeError,
   isEditingBadges,
   chatBadges,
 };

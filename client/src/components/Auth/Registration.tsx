@@ -8,6 +8,7 @@ import { loginPage } from 'librechat-data-provider';
 import type { TRegisterUser, TError } from 'librechat-data-provider';
 import type { TLoginLayoutContext } from '~/common';
 import { useLocalize, TranslationKeys } from '~/hooks';
+import { isSupabaseAuthEnabled, signUp } from '~/lib/auth';
 import { ErrorMessage } from './ErrorMessage';
 
 const Registration: React.FC = () => {
@@ -123,9 +124,34 @@ const Registration: React.FC = () => {
             className="mt-6"
             aria-label="Registration form"
             method="POST"
-            onSubmit={handleSubmit((data: TRegisterUser) =>
-              registerUser.mutate({ ...data, token: token ?? undefined }),
-            )}
+            onSubmit={handleSubmit(async (data: TRegisterUser) => {
+              if (isSupabaseAuthEnabled()) {
+                setIsSubmitting(true);
+                setErrorMessage('');
+                try {
+                  const session = await signUp(data.email, data.password ?? '', {
+                    displayName: data.name,
+                  });
+                  setIsSubmitting(false);
+                  if (session) {
+                    navigate('/home', { replace: true });
+                  } else {
+                    navigate('/login', { replace: true });
+                  }
+                  return;
+                } catch (signupError) {
+                  setIsSubmitting(false);
+                  setErrorMessage(
+                    signupError instanceof Error
+                      ? signupError.message
+                      : 'Registration failed. Please try again.',
+                  );
+                  return;
+                }
+              }
+
+              registerUser.mutate({ ...data, token: token ?? undefined });
+            })}
           >
             {renderInput('name', 'com_auth_full_name', 'text', {
               required: localize('com_auth_name_required'),

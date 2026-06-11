@@ -97,6 +97,11 @@ const userSchema = new Schema<IUser>(
       sparse: true,
       index: true,
     },
+    supabaseId: {
+      type: String,
+      sparse: true,
+      index: true,
+    },
     plugins: {
       type: Array,
     },

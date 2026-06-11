@@ -16,6 +16,7 @@ import {
   setTokenHeader,
   isSystemRoleName,
   buildLoginRedirectUrl,
+  dataService,
 } from 'librechat-data-provider';
 import type * as t from 'librechat-data-provider';
 import type { ReactNode } from 'react';
@@ -30,8 +31,8 @@ import { TAuthConfig, TUserContext, TAuthContext, TResError } from '~/common';
 import { SESSION_KEY, isSafeRedirect, getPostLoginRedirect } from '~/utils';
 import useTimeout from './useTimeout';
 import store from '~/store';
-import { isClerkEnabled } from '~/components/Auth/Clerk/ClerkRoot';
-import ClerkAuthBridge from '~/components/Auth/Clerk/ClerkAuthBridge';
+import { getAccessToken, isSupabaseAuthEnabled, signIn, signOut } from '~/lib/auth';
+import SupabaseAuthBridge from '~/components/Auth/Supabase/SupabaseAuthBridge';
 
 const AuthContext = (import.meta.hot?.data?.__AuthContext ??
   createContext<TAuthContext | undefined>(undefined)) as React.Context<TAuthContext | undefined>;
@@ -115,9 +116,6 @@ const AuthContextProvider = ({
     onError: (error: TResError | unknown) => {
       const resError = error as TResError;
       doSetError(resError.message);
-      // Preserve a valid redirect_to across login failures so the deep link survives retries.
-      // Cannot use buildLoginRedirectUrl() here — it reads the current pathname (already /login)
-      // and would return plain /login, dropping the redirect_to destination.
       const redirectTo = new URLSearchParams(window.location.search).get('redirect_to');
       const loginPath =
         redirectTo && isSafeRedirect(redirectTo)
@@ -129,10 +127,6 @@ const AuthContextProvider = ({
   const logoutUser = useLogoutUserMutation({
     onSuccess: (data) => {
       if (data.redirect) {
-        /** data.redirect is the IdP's end_session_endpoint URL — an absolute URL generated
-         * server-side from trusted IdP metadata (not user input), so isSafeRedirect is bypassed.
-         * setUserContext is debounced (50ms) and won't fire before page unload, so clear the
-         * axios Authorization header synchronously to prevent in-flight requests. */
         isExternalRedirectRef.current = true;
         setTokenHeader(undefined);
         window.location.replace(data.redirect);
@@ -159,21 +153,62 @@ const AuthContextProvider = ({
 
   const logout = useCallback(
     (redirect?: string) => {
+      if (isSupabaseAuthEnabled()) {
+        void (async () => {
+          try {
+            await signOut();
+          } finally {
+            setUserContext({
+              token: undefined,
+              isAuthenticated: false,
+              user: undefined,
+              redirect: redirect ?? '/login',
+            });
+          }
+        })();
+        return;
+      }
+
       if (redirect) {
         logoutRedirectRef.current = redirect;
       }
       logoutUser.mutate(undefined);
     },
-    [logoutUser],
+    [logoutUser, setUserContext],
   );
 
   const userQuery = useGetUserQuery({ enabled: !!(token ?? '') });
 
   const login = (data: t.TLoginUser) => {
+    if (isSupabaseAuthEnabled()) {
+      void (async () => {
+        try {
+          setError(undefined);
+          await signIn(data.email, data.password ?? '');
+          const accessToken = await getAccessToken();
+          if (!accessToken) {
+            throw new Error('Sign in succeeded but no session was returned.');
+          }
+          const result = await dataService.exchangeSupabaseSession(accessToken);
+          setUserContext({
+            token: result.token,
+            isAuthenticated: true,
+            user: result.user as t.TUser,
+            redirect: '/home',
+          });
+        } catch (loginError) {
+          const message =
+            loginError instanceof Error ? loginError.message : 'Sign in failed. Please try again.';
+          doSetError(message);
+        }
+      })();
+      return;
+    }
+
     loginUser.mutate(data);
   };
 
-  const handleClerkAuthenticated = useCallback(
+  const handleSupabaseAuthenticated = useCallback(
     (nextToken: string, nextUser: Record<string, unknown>) => {
       setError(undefined);
       setUserContext({
@@ -185,7 +220,7 @@ const AuthContextProvider = ({
     [setUserContext],
   );
 
-  const handleClerkSignedOut = useCallback(() => {
+  const handleSupabaseSignedOut = useCallback(() => {
     setUserContext({
       token: undefined,
       isAuthenticated: false,
@@ -250,7 +285,7 @@ const AuthContextProvider = ({
     if (userQuery.data) {
       setUser(userQuery.data);
     } else if (userQuery.isError) {
-      if (isClerkEnabled() && isAuthenticated && user) {
+      if (isSupabaseAuthEnabled() && isAuthenticated && user) {
         return;
       }
       doSetError((userQuery.error as Error).message);
@@ -259,7 +294,7 @@ const AuthContextProvider = ({
     if (error != null && error && isAuthenticated) {
       doSetError(undefined);
     }
-    if (!isClerkEnabled() && (token == null || !token || !isAuthenticated)) {
+    if (!isSupabaseAuthEnabled() && (token == null || !token || !isAuthenticated)) {
       silentRefresh();
     }
   }, [
@@ -324,10 +359,10 @@ const AuthContextProvider = ({
 
   return (
     <AuthContext.Provider value={memoedValue}>
-      {isClerkEnabled() && (
-        <ClerkAuthBridge
-          onAuthenticated={handleClerkAuthenticated}
-          onSignedOut={handleClerkSignedOut}
+      {isSupabaseAuthEnabled() && (
+        <SupabaseAuthBridge
+          onAuthenticated={handleSupabaseAuthenticated}
+          onSignedOut={handleSupabaseSignedOut}
         />
       )}
       {children}

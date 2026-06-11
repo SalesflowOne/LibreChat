@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Spinner, Button } from '@librechat/client';
 import { useOutletContext } from 'react-router-dom';
@@ -6,6 +7,7 @@ import { useResetPasswordMutation } from 'librechat-data-provider/react-query';
 import type { TResetPassword } from 'librechat-data-provider';
 import type { TLoginLayoutContext } from '~/common';
 import { useLocalize } from '~/hooks';
+import { isSupabaseAuthEnabled, updatePassword } from '~/lib/auth';
 
 function ResetPassword() {
   const localize = useLocalize();
@@ -21,7 +23,22 @@ function ResetPassword() {
   const resetPassword = useResetPasswordMutation();
   const { setError, setHeaderText, startupConfig } = useOutletContext<TLoginLayoutContext>();
 
+  const [supabaseSuccess, setSupabaseSuccess] = useState(false);
+
   const onSubmit = (data: TResetPassword) => {
+    if (isSupabaseAuthEnabled()) {
+      void (async () => {
+        try {
+          await updatePassword(data.password ?? '');
+          setSupabaseSuccess(true);
+          setHeaderText('com_auth_reset_password_success');
+        } catch {
+          setError('com_auth_error_invalid_reset_token');
+        }
+      })();
+      return;
+    }
+
     resetPassword.mutate(data, {
       onError: () => {
         setError('com_auth_error_invalid_reset_token');
@@ -32,7 +49,7 @@ function ResetPassword() {
     });
   };
 
-  if (resetPassword.isSuccess) {
+  if (resetPassword.isSuccess || supabaseSuccess) {
     return (
       <>
         <div

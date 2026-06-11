@@ -32,13 +32,14 @@ services:
       HOST: 0.0.0.0
       PORT: 3080
       NODE_ENV: production
-      CLERK_AUTH_ENABLED: 'true'
-      CLERK_ONLY_AUTH: 'true'
-      JWKS_URL: 'https://clerk.oneaccess.one/.well-known/jwks.json'
+      SUPABASE_AUTH_ENABLED: 'true'
+      SUPABASE_URL: '${SUPABASE_URL}'
+      SUPABASE_SERVICE_ROLE_KEY: '${SUPABASE_SERVICE_ROLE_KEY}'
       DOMAIN_CLIENT: 'https://artemiis.one'
       DOMAIN_SERVER: 'http://api-ysoisbo6gtf0sbmokrhoqfm2.5.161.212.253.sslip.io'
       ALLOW_REGISTRATION: 'false'
       ALLOW_EMAIL_LOGIN: 'false'
+      # Sign-up/login handled by Supabase Auth on the frontend; API uses JWT exchange.
       MONGO_URI: 'mongodb://mongodb:27017/LibreChat'
       MEILI_HOST: 'http://meilisearch:7700'
       MEILI_MASTER_KEY: DrhYf7zENyR6AlUCKmnz0eYASOQdl6zxH7s7MKFSfFCt

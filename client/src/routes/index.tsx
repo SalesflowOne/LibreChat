@@ -27,18 +27,17 @@ import AgentOpsSpaces from './AgentOpsSpaces';
 import AgentOpsConnectors from './AgentOpsConnectors';
 import AgentOpsIntegrationDetail from './AgentOpsIntegrationDetail';
 import AuthIndexRedirect from './AuthIndexRedirect';
-import ClerkSignInRedirect from '~/components/Auth/Clerk/ClerkSignInRedirect';
-import ClerkAuthGate from '~/components/Auth/Clerk/ClerkAuthGate';
-import { isClerkEnabled } from '~/components/Auth/Clerk/ClerkRoot';
+import Profile from './Profile';
+import SupabaseAuthGate from '~/components/Auth/Supabase/SupabaseAuthGate';
 
 const AuthLayout = () => (
   <AuthContextProvider>
-    <ClerkAuthGate>
+    <SupabaseAuthGate>
       <WithRum>
         <Outlet />
       </WithRum>
       <ApiErrorWatcher />
-    </ClerkAuthGate>
+    </SupabaseAuthGate>
   </AuthContextProvider>
 );
 
@@ -110,7 +109,7 @@ export const router = createBrowserRouter(
           children: [
             {
               path: 'login',
-              element: isClerkEnabled() ? <ClerkSignInRedirect /> : <Login />,
+              element: <Login />,
             },
             {
               path: 'login/2fa',
@@ -130,6 +129,10 @@ export const router = createBrowserRouter(
             {
               path: 'home',
               element: <AgentOpsHome />,
+            },
+            {
+              path: 'profile',
+              element: <Profile />,
             },
             {
               path: 'artifacts',

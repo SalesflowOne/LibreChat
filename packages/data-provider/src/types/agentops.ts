@@ -98,7 +98,7 @@ export interface AgentRunsListResponse {
   runs: AgentRunRecord[];
 }
 
-export interface ClerkExchangeResponse {
+export interface AuthExchangeResponse {
   token: string;
   user: {
     id: string;
