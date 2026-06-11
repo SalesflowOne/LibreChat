@@ -218,7 +218,7 @@ export const pipedream = {
 };
 
 export const clerk = {
-  exchange: () => `${BASE_URL}/api/auth/clerk/exchange`,
+  exchange: () => `${BASE_URL}/api/auth/workspace/exchange`,
 };
 
 export const artifacts = {

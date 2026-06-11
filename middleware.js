@@ -89,8 +89,7 @@ export default async function middleware(request) {
   };
 
   if (request.method !== 'GET' && request.method !== 'HEAD') {
-    init.body = request.body;
-    init.duplex = 'half';
+    init.body = await request.arrayBuffer();
   }
 
   try {

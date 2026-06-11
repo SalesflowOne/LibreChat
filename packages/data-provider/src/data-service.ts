@@ -687,11 +687,28 @@ export const createPipedreamConnectToken = async (
 /**
  * Clerk auth exchange
  */
+const resolveClerkExchangeUrl = (): string => {
+  const path = endpoints.clerk.exchange();
+  const directApiUrl =
+    typeof import.meta !== 'undefined' &&
+    typeof import.meta.env?.VITE_LIBRECHAT_API_URL === 'string'
+      ? import.meta.env.VITE_LIBRECHAT_API_URL.trim()
+      : '';
+
+  if (!directApiUrl) {
+    return path;
+  }
+
+  const base = directApiUrl.replace(/\/$/, '');
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`;
+  return `${base}${normalizedPath}`;
+};
+
 export const exchangeClerkSession = async (
   clerkToken: string,
 ): Promise<import('./types/agentops').ClerkExchangeResponse> => {
   const response = await axios.post<import('./types/agentops').ClerkExchangeResponse>(
-    endpoints.clerk.exchange(),
+    resolveClerkExchangeUrl(),
     {},
     {
       headers: {

@@ -6,7 +6,7 @@
   "outputDirectory": "client/dist",
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/((?!api/|oauth/|health|livez|readyz|images/).*)",
       "destination": "/index.html"
     }
   ],

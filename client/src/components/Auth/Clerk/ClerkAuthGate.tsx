@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useAuth, useOrganization } from '@clerk/react';
+import { useAuth } from '@clerk/react';
 import { Button, Spinner } from '@librechat/client';
 import { useRecoilValue } from 'recoil';
 import { useLocalize } from '~/hooks';
@@ -17,6 +17,7 @@ const PUBLIC_ROUTE_PREFIXES = [
 ];
 
 const SESSION_SYNC_GRACE_MS = 3000;
+const AUTH_STALL_MS = 25_000;
 
 function isPublicAuthRoute(pathname: string): boolean {
   return PUBLIC_ROUTE_PREFIXES.some(
@@ -50,10 +51,11 @@ function ClerkAuthGateInner({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuthContext();
   const bridgeState = useRecoilValue(store.clerkBridgeState);
   const bridgeError = useRecoilValue(store.clerkBridgeError);
-  const { isLoaded, isSignedIn } = useAuth();
-  const { organization, isLoaded: isOrgLoaded } = useOrganization();
+  const { isLoaded, isSignedIn, orgId } = useAuth();
   const [sessionGraceElapsed, setSessionGraceElapsed] = useState(false);
+  const [authStalled, setAuthStalled] = useState(false);
   const graceStartedRef = useRef(false);
+  const stallStartedRef = useRef(false);
   const isPublicRoute = isPublicAuthRoute(location.pathname);
 
   useEffect(() => {
@@ -71,11 +73,40 @@ function ClerkAuthGateInner({ children }: { children: ReactNode }) {
     };
   }, [isLoaded]);
 
+  useEffect(() => {
+    if (isPublicRoute || isAuthenticated || bridgeState === 'error' || stallStartedRef.current) {
+      return;
+    }
+
+    stallStartedRef.current = true;
+    const timeout = window.setTimeout(() => {
+      setAuthStalled(true);
+    }, AUTH_STALL_MS);
+
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [isPublicRoute, isAuthenticated, bridgeState]);
+
   if (isPublicRoute) {
     return children;
   }
 
-  if (!isLoaded || !isOrgLoaded || bridgeState === 'loading') {
+  if (authStalled && bridgeState !== 'error' && !isAuthenticated) {
+    return (
+      <AuthStatusScreen
+        title={localize('com_ui_clerk_exchange_failed_title')}
+        description={localize('com_ui_clerk_exchange_failed_desc')}
+        action={
+          <Button type="button" variant="outline" onClick={() => window.location.reload()}>
+            {localize('com_ui_refresh_page')}
+          </Button>
+        }
+      />
+    );
+  }
+
+  if (!isLoaded || bridgeState === 'loading') {
     return (
       <AuthStatusScreen
         title={localize('com_ui_clerk_loading_title')}
@@ -121,7 +152,7 @@ function ClerkAuthGateInner({ children }: { children: ReactNode }) {
     );
   }
 
-  if (!organization?.id || bridgeState === 'needs_org') {
+  if (!orgId || bridgeState === 'needs_org') {
     const signInUrl = import.meta.env.VITE_CLERK_SIGN_IN_URL as string | undefined;
     return (
       <AuthStatusScreen

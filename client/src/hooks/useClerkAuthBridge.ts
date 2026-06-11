@@ -1,11 +1,13 @@
 import { useEffect, useRef } from 'react';
-import { useAuth, useOrganization } from '@clerk/react';
+import { useAuth } from '@clerk/react';
 import { useSetRecoilState } from 'recoil';
 import { dataService, setTokenHeader } from 'librechat-data-provider';
 import { isClerkEnabled } from '~/components/Auth/Clerk/ClerkRoot';
 import store from '~/store';
 
 type ExchangePhase = 'idle' | 'pending' | 'done' | 'error';
+
+const EXCHANGE_TIMEOUT_MS = 20_000;
 
 export function useClerkAuthBridge({
   onAuthenticated,
@@ -14,8 +16,7 @@ export function useClerkAuthBridge({
   onAuthenticated: (token: string, user: Record<string, unknown>) => void;
   onSignedOut: () => void;
 }) {
-  const { isLoaded, isSignedIn, getToken } = useAuth();
-  const { organization, isLoaded: isOrgLoaded } = useOrganization();
+  const { isLoaded, isSignedIn, orgId, getToken } = useAuth();
   const setQueriesEnabled = useSetRecoilState(store.queriesEnabled);
   const setBridgeState = useSetRecoilState(store.clerkBridgeState);
   const setBridgeError = useSetRecoilState(store.clerkBridgeError);
@@ -37,7 +38,7 @@ export function useClerkAuthBridge({
       return;
     }
 
-    if (!isLoaded || !isOrgLoaded) {
+    if (!isLoaded) {
       setBridgeState('loading');
       return;
     }
@@ -58,15 +59,15 @@ export function useClerkAuthBridge({
 
     wasSignedInRef.current = true;
 
-    if (!organization?.id) {
+    if (!orgId) {
       setBridgeState('needs_org');
       setBridgeError(null);
       return;
     }
 
-    if (lastOrgIdRef.current !== organization.id) {
+    if (lastOrgIdRef.current !== orgId) {
       exchangePhaseRef.current = 'idle';
-      lastOrgIdRef.current = organization.id;
+      lastOrgIdRef.current = orgId;
     }
 
     if (exchangePhaseRef.current === 'pending' || exchangePhaseRef.current === 'done') {
@@ -81,9 +82,26 @@ export function useClerkAuthBridge({
     setBridgeState('loading');
     setBridgeError(null);
 
+    let cancelled = false;
+
     void (async () => {
+      const timeout = window.setTimeout(() => {
+        if (cancelled || exchangePhaseRef.current !== 'pending') {
+          return;
+        }
+        exchangePhaseRef.current = 'error';
+        setBridgeState('error');
+        setBridgeError(
+          'Timed out connecting to the workspace API. The backend may still be deploying AgentOps routes.',
+        );
+      }, EXCHANGE_TIMEOUT_MS);
+
       try {
         const clerkToken = await getToken();
+        if (cancelled) {
+          return;
+        }
+
         if (!clerkToken) {
           exchangePhaseRef.current = 'error';
           setBridgeState('error');
@@ -92,6 +110,10 @@ export function useClerkAuthBridge({
         }
 
         const result = await dataService.exchangeClerkSession(clerkToken);
+        if (cancelled) {
+          return;
+        }
+
         setTokenHeader(result.token);
         setQueriesEnabled(true);
         exchangePhaseRef.current = 'done';
@@ -99,20 +121,30 @@ export function useClerkAuthBridge({
         setBridgeError(null);
         onAuthenticatedRef.current(result.token, result.user as Record<string, unknown>);
       } catch {
+        if (cancelled) {
+          return;
+        }
+
         setTokenHeader(undefined);
         setQueriesEnabled(false);
         exchangePhaseRef.current = 'error';
         setBridgeState('error');
         setBridgeError(
-          'Could not connect to the workspace API. The backend may still be deploying AgentOps routes.',
+          'Could not connect to the workspace API. The backend is still running the upstream LibreChat image without Clerk support.',
         );
+      } finally {
+        window.clearTimeout(timeout);
       }
     })();
+
+    return () => {
+      cancelled = true;
+    };
   }, [
     isLoaded,
-    isOrgLoaded,
     isSignedIn,
-    organization?.id,
+    orgId,
+    getToken,
     setQueriesEnabled,
     setBridgeState,
     setBridgeError,

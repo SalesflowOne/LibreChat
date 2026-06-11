@@ -1,0 +1,17 @@
+# Thin overlay: AgentOps API on top of upstream LibreChat runtime (reuses upstream client dist).
+FROM registry.librechat.ai/danny-avila/librechat-dev:latest
+
+COPY packages/data-provider/dist /app/packages/data-provider/dist
+COPY packages/data-schemas/dist /app/packages/data-schemas/dist
+COPY packages/api/dist /app/packages/api/dist
+COPY packages/api/package.json /app/packages/api/package.json
+COPY api /app/api
+COPY config /app/config
+
+# Upstream image resolves @librechat/api via index.cjs; align with our build output.
+RUN cp /app/packages/api/dist/index.js /app/packages/api/dist/index.cjs
+
+WORKDIR /app/api
+EXPOSE 3080
+ENV HOST=0.0.0.0
+CMD ["node", "server/index.js"]

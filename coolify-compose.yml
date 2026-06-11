@@ -1,0 +1,70 @@
+services:
+  mongodb:
+    image: 'mongo:8.0.20'
+    restart: unless-stopped
+    volumes:
+      - 'librechat_mongo:/data/db'
+    command: 'mongod --noauth'
+    healthcheck:
+      test:
+        - CMD
+        - mongosh
+        - '--eval'
+        - "db.adminCommand('ping')"
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  meilisearch:
+    image: 'getmeili/meilisearch:v1.35.1'
+    restart: unless-stopped
+    environment:
+      MEILI_NO_ANALYTICS: 'true'
+      MEILI_MASTER_KEY: DrhYf7zENyR6AlUCKmnz0eYASOQdl6zxH7s7MKFSfFCt
+    volumes:
+      - 'meili_data:/meili_data'
+  api:
+    image: 'ghcr.io/salesflowone/librechat-dev-api:latest'
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3080
+      NODE_ENV: production
+      CLERK_AUTH_ENABLED: 'true'
+      CLERK_ONLY_AUTH: 'true'
+      JWKS_URL: 'https://clerk.oneaccess.one/.well-known/jwks.json'
+      DOMAIN_CLIENT: 'https://artemiis.one'
+      DOMAIN_SERVER: 'http://api-ysoisbo6gtf0sbmokrhoqfm2.5.161.212.253.sslip.io'
+      ALLOW_REGISTRATION: 'false'
+      ALLOW_EMAIL_LOGIN: 'false'
+      MONGO_URI: 'mongodb://mongodb:27017/LibreChat'
+      MEILI_HOST: 'http://meilisearch:7700'
+      MEILI_MASTER_KEY: DrhYf7zENyR6AlUCKmnz0eYASOQdl6zxH7s7MKFSfFCt
+      JWT_SECRET: ca6c6dac2943d837c2859a4446f2331d3953a7281c79b472b52d8cb2768944f7
+      CREDS_KEY: f34be427ebb29de8d88c107a71546019685ed8b241d8f2ed00c3df97ad2566f0
+      CREDS_IV: e2341419ec3dd3d19b13a1a87fafcbfb
+      TRUST_PROXY: '1'
+      NO_INDEX: 'true'
+      ALLOW_UNVERIFIED_EMAIL_LOGIN: 'true'
+      SESSION_COOKIE_SECURE: 'false'
+      OPENAI_API_KEY: '${OPENAI_API_KEY}'
+      ANTHROPIC_API_KEY: '${ANTHROPIC_API_KEY}'
+      JWT_REFRESH_SECRET: ca6c6dac2943d837c2859a4446f2331d3953a7281c79b472b52d8cb2768944f7
+    labels:
+      - coolify.managed=true
+  admin-bootstrap:
+    image: 'mongo:8.0.20'
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    restart: 'no'
+    entrypoint:
+      - mongosh
+      - 'mongodb://mongodb:27017/LibreChat'
+      - '--eval'
+      - 'printjson(db.users.countDocuments({}));'
+volumes:
+  librechat_mongo: null
+  meili_data: null
