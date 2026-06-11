@@ -102,7 +102,16 @@ export default async function middleware(request) {
       });
     }
 
-    return upstream;
+    const responseHeaders = new Headers(upstream.headers);
+    responseHeaders.delete('connection');
+    responseHeaders.delete('keep-alive');
+    responseHeaders.delete('transfer-encoding');
+
+    return new Response(upstream.body, {
+      status: upstream.status,
+      statusText: upstream.statusText,
+      headers: responseHeaders,
+    });
   } catch {
     if (isConfigRequest(requestUrl.pathname) && request.method === 'GET') {
       return Response.json(preLoginConfigFallback(requestUrl), {
