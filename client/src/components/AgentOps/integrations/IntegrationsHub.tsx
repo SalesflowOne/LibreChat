@@ -14,6 +14,7 @@ import {
   usePipedreamStatusQuery,
 } from '~/data-provider/Pipedream';
 import MCPServerDialog from '~/components/SidePanel/MCPBuilder/MCPServerDialog';
+import AgentOpsPage, { AGENT_OPS_CARDS_GRID } from '~/components/AgentOps/Page';
 import IntegrationCard from './IntegrationCard';
 import { POPULAR_INTEGRATION_SLUGS } from './constants';
 import { filterAppsByQuery, getConnectedAppSlugs } from './utils';
@@ -60,7 +61,7 @@ export default function IntegrationsHub() {
   const isLoading = isStatusLoading || (status?.enabled && isAccountsLoading);
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-6xl flex-col gap-6 overflow-y-auto p-6">
+    <AgentOpsPage>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-2">
           <h1 className="text-3xl font-semibold text-text-primary">
@@ -138,12 +139,12 @@ export default function IntegrationsHub() {
           {localize('com_ui_integrations_no_results')}
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" role="list">
+        <div className={AGENT_OPS_CARDS_GRID} role="list">
           {visibleApps.map((app) => (
             <IntegrationCard key={app.slug} app={app} accounts={accounts} />
           ))}
         </div>
       )}
-    </div>
+    </AgentOpsPage>
   );
 }

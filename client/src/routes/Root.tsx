@@ -85,7 +85,7 @@ export default function Root() {
                 <div className="relative z-0 flex h-full w-full overflow-hidden">
                   <UnifiedSidebar />
                   <div
-                    className="relative flex h-full max-w-full flex-1 flex-col overflow-hidden"
+                    className="relative flex h-full min-w-0 w-full max-w-full flex-1 flex-col overflow-hidden"
                     style={{
                       transform:
                         isSmallScreen && sidebarExpanded ? 'translateX(min(85vw, 380px))' : 'none',

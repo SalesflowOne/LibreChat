@@ -8,6 +8,7 @@ import {
   useAgentRunsQuery,
 } from '~/data-provider/AgentOps';
 import { usePipedreamStatusQuery } from '~/data-provider/Pipedream';
+import AgentOpsPage, { AGENT_OPS_PANELS_GRID, AGENT_OPS_STATS_GRID } from './Page';
 
 export default function CommandCenter() {
   const localize = useLocalize();
@@ -19,7 +20,7 @@ export default function CommandCenter() {
   const isLoading = artifactsLoading || spacesLoading || runsLoading;
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-6xl flex-col gap-6 overflow-y-auto p-6">
+    <AgentOpsPage>
       <div className="space-y-2">
         <p className="text-xs font-medium uppercase tracking-[0.2em] text-text-secondary">
           {localize('com_ui_agentops_label')}
@@ -37,7 +38,7 @@ export default function CommandCenter() {
           <Spinner className="h-8 w-8" />
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className={AGENT_OPS_STATS_GRID}>
           <StatCard
             icon={PlugZap}
             title={localize('com_ui_agentops_connectors')}
@@ -69,7 +70,7 @@ export default function CommandCenter() {
         </div>
       )}
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className={AGENT_OPS_PANELS_GRID}>
         <section className="rounded-2xl border border-border-light bg-surface-primary p-5">
           <h2 className="text-lg font-medium text-text-primary">
             {localize('com_ui_agentops_quick_actions')}
@@ -112,7 +113,7 @@ export default function CommandCenter() {
           </ul>
         </section>
       </div>
-    </div>
+    </AgentOpsPage>
   );
 }
 
@@ -132,7 +133,7 @@ function StatCard({
   return (
     <Link
       to={to}
-      className="group rounded-2xl border border-border-light bg-surface-primary p-5 transition hover:border-border-medium hover:bg-surface-secondary"
+      className="group min-w-0 rounded-2xl border border-border-light bg-surface-primary p-5 transition hover:border-border-medium hover:bg-surface-secondary"
     >
       <div className="flex items-center justify-between">
         <Icon className="h-5 w-5 text-text-secondary" aria-hidden="true" />
@@ -140,7 +141,7 @@ function StatCard({
       </div>
       <p className="mt-4 text-3xl font-semibold text-text-primary">{value}</p>
       <p className="mt-1 text-sm font-medium text-text-primary">{title}</p>
-      <p className="mt-2 text-xs text-text-secondary">{hint}</p>
+      <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-text-secondary">{hint}</p>
     </Link>
   );
 }

@@ -18,6 +18,7 @@ import {
   usePipedreamAccountsQuery,
   usePipedreamStatusQuery,
 } from '~/data-provider/Pipedream';
+import AgentOpsPage from '~/components/AgentOps/Page';
 import { getActiveAccountsForApp } from './utils';
 
 export default function IntegrationDetail() {
@@ -86,7 +87,7 @@ export default function IntegrationDetail() {
 
   if (!status?.enabled || !app) {
     return (
-      <div className="mx-auto flex h-full w-full max-w-6xl flex-col gap-4 overflow-y-auto p-6">
+      <AgentOpsPage>
         <nav className="flex items-center gap-1 text-sm text-text-secondary" aria-label="Breadcrumb">
           <Link to="/connectors" className="hover:text-text-primary">
             {localize('com_ui_integrations_breadcrumb')}
@@ -102,7 +103,7 @@ export default function IntegrationDetail() {
             <Link to="/connectors">{localize('com_ui_integrations_back_to_hub')}</Link>
           </Button>
         </div>
-      </div>
+      </AgentOpsPage>
     );
   }
 
