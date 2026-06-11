@@ -1,11 +1,16 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useAuth } from '@clerk/react';
+import { useAuth, useClerk } from '@clerk/react';
 import { Button, Spinner } from '@librechat/client';
 import { useRecoilValue } from 'recoil';
 import { useLocalize } from '~/hooks';
 import { useAuthContext } from '~/hooks/AuthContext';
 import { isClerkEnabled } from '~/components/Auth/Clerk/ClerkRoot';
+import {
+  buildSatelliteSignInUrl,
+  getClerkReturnUrl,
+  isClerkSyncReturn,
+} from '~/components/Auth/Clerk/clerkUrls';
 import store from '~/store';
 
 const PUBLIC_ROUTE_PREFIXES = [
@@ -17,6 +22,7 @@ const PUBLIC_ROUTE_PREFIXES = [
 ];
 
 const SESSION_SYNC_GRACE_MS = 3000;
+const SESSION_SYNC_RETURN_GRACE_MS = 12_000;
 const AUTH_STALL_MS = 25_000;
 
 function isPublicAuthRoute(pathname: string): boolean {
@@ -52,6 +58,7 @@ function ClerkAuthGateInner({ children }: { children: ReactNode }) {
   const bridgeState = useRecoilValue(store.clerkBridgeState);
   const bridgeError = useRecoilValue(store.clerkBridgeError);
   const { isLoaded, isSignedIn, orgId } = useAuth();
+  const { buildSignInUrl } = useClerk();
   const [sessionGraceElapsed, setSessionGraceElapsed] = useState(false);
   const [authStalled, setAuthStalled] = useState(false);
   const graceStartedRef = useRef(false);
@@ -64,14 +71,17 @@ function ClerkAuthGateInner({ children }: { children: ReactNode }) {
     }
 
     graceStartedRef.current = true;
+    const graceMs = isClerkSyncReturn(location.search)
+      ? SESSION_SYNC_RETURN_GRACE_MS
+      : SESSION_SYNC_GRACE_MS;
     const timeout = window.setTimeout(() => {
       setSessionGraceElapsed(true);
-    }, SESSION_SYNC_GRACE_MS);
+    }, graceMs);
 
     return () => {
       window.clearTimeout(timeout);
     };
-  }, [isLoaded]);
+  }, [isLoaded, location.search]);
 
   useEffect(() => {
     if (isPublicRoute || isAuthenticated || bridgeState === 'error' || stallStartedRef.current) {
@@ -127,50 +137,43 @@ function ClerkAuthGateInner({ children }: { children: ReactNode }) {
       );
     }
 
-    const signInUrl = import.meta.env.VITE_CLERK_SIGN_IN_URL as string | undefined;
-    const returnUrl = `${window.location.origin}${location.pathname}${location.search}${location.hash}`;
+    const returnUrl = getClerkReturnUrl(location.pathname, location.search, location.hash);
+    const signInUrl = buildSatelliteSignInUrl(buildSignInUrl, returnUrl);
 
     return (
       <AuthStatusScreen
         title={localize('com_ui_clerk_sign_in_required_title')}
         description={localize('com_ui_clerk_sign_in_required_desc')}
         action={
-          signInUrl ? (
-            <Button
-              type="button"
-              onClick={() => {
-                const target = new URL(signInUrl);
-                target.searchParams.set('redirect_url', returnUrl);
-                window.location.assign(target.toString());
-              }}
-            >
-              {localize('com_ui_clerk_continue_sign_in')}
-            </Button>
-          ) : undefined
+          <Button type="button" onClick={() => window.location.assign(signInUrl)}>
+            {localize('com_ui_clerk_continue_sign_in')}
+          </Button>
         }
       />
     );
   }
 
   if (!orgId || bridgeState === 'needs_org') {
-    const signInUrl = import.meta.env.VITE_CLERK_SIGN_IN_URL as string | undefined;
+    const returnUrl = getClerkReturnUrl(location.pathname, location.search, location.hash);
+    const signInUrl = buildSatelliteSignInUrl(buildSignInUrl, returnUrl);
+
     return (
       <AuthStatusScreen
         title={localize('com_ui_clerk_org_required_title')}
         description={localize('com_ui_clerk_org_required_desc')}
         action={
-          signInUrl ? (
-            <Button type="button" onClick={() => window.location.assign(signInUrl)}>
-              {localize('com_ui_clerk_open_workspace')}
-            </Button>
-          ) : undefined
+          <Button type="button" onClick={() => window.location.assign(signInUrl)}>
+            {localize('com_ui_clerk_open_workspace')}
+          </Button>
         }
       />
     );
   }
 
   if (bridgeState === 'error') {
-    const signInUrl = import.meta.env.VITE_CLERK_SIGN_IN_URL as string | undefined;
+    const returnUrl = getClerkReturnUrl(location.pathname, location.search, location.hash);
+    const signInUrl = buildSatelliteSignInUrl(buildSignInUrl, returnUrl);
+
     return (
       <AuthStatusScreen
         title={localize('com_ui_clerk_exchange_failed_title')}
@@ -180,11 +183,9 @@ function ClerkAuthGateInner({ children }: { children: ReactNode }) {
             <Button type="button" variant="outline" onClick={() => window.location.reload()}>
               {localize('com_ui_refresh_page')}
             </Button>
-            {signInUrl ? (
-              <Button type="button" variant="ghost" onClick={() => window.location.assign(signInUrl)}>
-                {localize('com_ui_clerk_try_again')}
-              </Button>
-            ) : null}
+            <Button type="button" variant="ghost" onClick={() => window.location.assign(signInUrl)}>
+              {localize('com_ui_clerk_try_again')}
+            </Button>
           </div>
         }
       />

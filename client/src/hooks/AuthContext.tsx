@@ -250,6 +250,9 @@ const AuthContextProvider = ({
     if (userQuery.data) {
       setUser(userQuery.data);
     } else if (userQuery.isError) {
+      if (isClerkEnabled() && isAuthenticated && user) {
+        return;
+      }
       doSetError((userQuery.error as Error).message);
       navigate(buildLoginRedirectUrl(), { replace: true });
     }
@@ -261,6 +264,7 @@ const AuthContextProvider = ({
     }
   }, [
     token,
+    user,
     isAuthenticated,
     userQuery.data,
     userQuery.isError,
