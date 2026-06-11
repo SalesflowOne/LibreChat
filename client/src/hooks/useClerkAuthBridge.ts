@@ -18,6 +18,13 @@ export function useClerkAuthBridge({
   const setBridgeState = useSetRecoilState(store.clerkBridgeState);
   const setBridgeError = useSetRecoilState(store.clerkBridgeError);
   const exchangingRef = useRef(false);
+  const onAuthenticatedRef = useRef(onAuthenticated);
+  const onSignedOutRef = useRef(onSignedOut);
+
+  useEffect(() => {
+    onAuthenticatedRef.current = onAuthenticated;
+    onSignedOutRef.current = onSignedOut;
+  }, [onAuthenticated, onSignedOut]);
 
   useEffect(() => {
     if (!isClerkEnabled()) {
@@ -36,7 +43,7 @@ export function useClerkAuthBridge({
       setQueriesEnabled(false);
       setBridgeState('idle');
       setBridgeError(null);
-      onSignedOut();
+      onSignedOutRef.current();
       return;
     }
 
@@ -68,7 +75,7 @@ export function useClerkAuthBridge({
         setQueriesEnabled(true);
         setBridgeState('ready');
         setBridgeError(null);
-        onAuthenticated(result.token, result.user as Record<string, unknown>);
+        onAuthenticatedRef.current(result.token, result.user as Record<string, unknown>);
       } catch {
         setTokenHeader(undefined);
         setQueriesEnabled(false);
@@ -76,7 +83,6 @@ export function useClerkAuthBridge({
         setBridgeError(
           'Could not connect to the workspace API. The backend may still be deploying AgentOps routes.',
         );
-        onSignedOut();
       } finally {
         exchangingRef.current = false;
       }
@@ -87,8 +93,6 @@ export function useClerkAuthBridge({
     isSignedIn,
     organization?.id,
     getToken,
-    onAuthenticated,
-    onSignedOut,
     setQueriesEnabled,
     setBridgeState,
     setBridgeError,

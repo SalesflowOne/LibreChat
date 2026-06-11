@@ -31,7 +31,7 @@ import { SESSION_KEY, isSafeRedirect, getPostLoginRedirect } from '~/utils';
 import useTimeout from './useTimeout';
 import store from '~/store';
 import { isClerkEnabled } from '~/components/Auth/Clerk/ClerkRoot';
-import { useClerkAuthBridge } from '~/hooks/useClerkAuthBridge';
+import ClerkAuthBridge from '~/components/Auth/Clerk/ClerkAuthBridge';
 
 const AuthContext = (import.meta.hot?.data?.__AuthContext ??
   createContext<TAuthContext | undefined>(undefined)) as React.Context<TAuthContext | undefined>;
@@ -173,8 +173,8 @@ const AuthContextProvider = ({
     loginUser.mutate(data);
   };
 
-  useClerkAuthBridge({
-    onAuthenticated: (nextToken, nextUser) => {
+  const handleClerkAuthenticated = useCallback(
+    (nextToken: string, nextUser: Record<string, unknown>) => {
       setError(undefined);
       setUserContext({
         token: nextToken,
@@ -182,14 +182,16 @@ const AuthContextProvider = ({
         user: nextUser as t.TUser,
       });
     },
-    onSignedOut: () => {
-      setUserContext({
-        token: undefined,
-        isAuthenticated: false,
-        user: undefined,
-      });
-    },
-  });
+    [setUserContext],
+  );
+
+  const handleClerkSignedOut = useCallback(() => {
+    setUserContext({
+      token: undefined,
+      isAuthenticated: false,
+      user: undefined,
+    });
+  }, [setUserContext]);
 
   const silentRefresh = useCallback(() => {
     if (authConfig?.test === true) {
@@ -316,7 +318,17 @@ const AuthContextProvider = ({
     ],
   );
 
-  return <AuthContext.Provider value={memoedValue}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={memoedValue}>
+      {isClerkEnabled() && (
+        <ClerkAuthBridge
+          onAuthenticated={handleClerkAuthenticated}
+          onSignedOut={handleClerkSignedOut}
+        />
+      )}
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
 const useAuthContext = () => {

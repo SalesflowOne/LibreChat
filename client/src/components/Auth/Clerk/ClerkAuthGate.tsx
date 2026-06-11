@@ -1,8 +1,9 @@
-import type { ReactNode } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useEffect, type ReactNode } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth, useOrganization } from '@clerk/react';
 import { Button, Spinner } from '@librechat/client';
 import { useRecoilValue } from 'recoil';
+import { buildLoginRedirectUrl } from 'librechat-data-provider';
 import { useLocalize } from '~/hooks';
 import { useAuthContext } from '~/hooks/AuthContext';
 import { isClerkEnabled } from '~/components/Auth/Clerk/ClerkRoot';
@@ -42,16 +43,37 @@ function AuthStatusScreen({
   );
 }
 
-export default function ClerkAuthGate({ children }: { children: ReactNode }) {
+function ClerkAuthGateInner({ children }: { children: ReactNode }) {
   const localize = useLocalize();
+  const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated } = useAuthContext();
   const bridgeState = useRecoilValue(store.clerkBridgeState);
   const bridgeError = useRecoilValue(store.clerkBridgeError);
   const { isLoaded, isSignedIn } = useAuth();
   const { organization, isLoaded: isOrgLoaded } = useOrganization();
+  const isPublicRoute = isPublicAuthRoute(location.pathname);
 
-  if (!isClerkEnabled() || isPublicAuthRoute(location.pathname)) {
+  useEffect(() => {
+    if (!isLoaded || isPublicRoute || isSignedIn) {
+      return;
+    }
+
+    const signInUrl = import.meta.env.VITE_CLERK_SIGN_IN_URL as string | undefined;
+    if (signInUrl) {
+      const redirectUrl = `${window.location.origin}${location.pathname}${location.search}${location.hash}`;
+      const target = new URL(signInUrl);
+      target.searchParams.set('redirect_url', redirectUrl);
+      window.location.replace(target.toString());
+      return;
+    }
+
+    navigate(buildLoginRedirectUrl(location.pathname, location.search, location.hash), {
+      replace: true,
+    });
+  }, [isLoaded, isPublicRoute, isSignedIn, location.pathname, location.search, location.hash, navigate]);
+
+  if (isPublicRoute) {
     return children;
   }
 
@@ -66,7 +88,13 @@ export default function ClerkAuthGate({ children }: { children: ReactNode }) {
   }
 
   if (!isSignedIn) {
-    return children;
+    return (
+      <AuthStatusScreen
+        title={localize('com_ui_clerk_loading_title')}
+        description={localize('com_ui_clerk_loading_desc')}
+        action={<Spinner className="mx-auto h-8 w-8" />}
+      />
+    );
   }
 
   if (!organization?.id || bridgeState === 'needs_org') {
@@ -118,4 +146,12 @@ export default function ClerkAuthGate({ children }: { children: ReactNode }) {
   }
 
   return children;
+}
+
+export default function ClerkAuthGate({ children }: { children: ReactNode }) {
+  if (!isClerkEnabled()) {
+    return children;
+  }
+
+  return <ClerkAuthGateInner>{children}</ClerkAuthGateInner>;
 }

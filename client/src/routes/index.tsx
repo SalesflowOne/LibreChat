@@ -26,6 +26,7 @@ import AgentOpsArtifacts from './AgentOpsArtifacts';
 import AgentOpsSpaces from './AgentOpsSpaces';
 import AgentOpsConnectors from './AgentOpsConnectors';
 import AgentOpsIntegrationDetail from './AgentOpsIntegrationDetail';
+import AuthIndexRedirect from './AuthIndexRedirect';
 import ClerkSignInRedirect from '~/components/Auth/Clerk/ClerkSignInRedirect';
 import ClerkAuthGate from '~/components/Auth/Clerk/ClerkAuthGate';
 import { isClerkEnabled } from '~/components/Auth/Clerk/ClerkRoot';
@@ -124,7 +125,7 @@ export const router = createBrowserRouter(
           children: [
             {
               index: true,
-              element: <Navigate to="/home" replace={true} />,
+              element: <AuthIndexRedirect />,
             },
             {
               path: 'home',
