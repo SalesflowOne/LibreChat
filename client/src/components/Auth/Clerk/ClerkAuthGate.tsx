@@ -1,9 +1,8 @@
-import { useEffect, type ReactNode } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useAuth, useOrganization } from '@clerk/react';
 import { Button, Spinner } from '@librechat/client';
 import { useRecoilValue } from 'recoil';
-import { buildLoginRedirectUrl } from 'librechat-data-provider';
 import { useLocalize } from '~/hooks';
 import { useAuthContext } from '~/hooks/AuthContext';
 import { isClerkEnabled } from '~/components/Auth/Clerk/ClerkRoot';
@@ -16,6 +15,8 @@ const PUBLIC_ROUTE_PREFIXES = [
   '/reset-password',
   '/verify',
 ];
+
+const SESSION_SYNC_GRACE_MS = 3000;
 
 function isPublicAuthRoute(pathname: string): boolean {
   return PUBLIC_ROUTE_PREFIXES.some(
@@ -45,33 +46,30 @@ function AuthStatusScreen({
 
 function ClerkAuthGateInner({ children }: { children: ReactNode }) {
   const localize = useLocalize();
-  const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated } = useAuthContext();
   const bridgeState = useRecoilValue(store.clerkBridgeState);
   const bridgeError = useRecoilValue(store.clerkBridgeError);
   const { isLoaded, isSignedIn } = useAuth();
   const { organization, isLoaded: isOrgLoaded } = useOrganization();
+  const [sessionGraceElapsed, setSessionGraceElapsed] = useState(false);
+  const graceStartedRef = useRef(false);
   const isPublicRoute = isPublicAuthRoute(location.pathname);
 
   useEffect(() => {
-    if (!isLoaded || isPublicRoute || isSignedIn) {
+    if (!isLoaded || graceStartedRef.current) {
       return;
     }
 
-    const signInUrl = import.meta.env.VITE_CLERK_SIGN_IN_URL as string | undefined;
-    if (signInUrl) {
-      const redirectUrl = `${window.location.origin}${location.pathname}${location.search}${location.hash}`;
-      const target = new URL(signInUrl);
-      target.searchParams.set('redirect_url', redirectUrl);
-      window.location.replace(target.toString());
-      return;
-    }
+    graceStartedRef.current = true;
+    const timeout = window.setTimeout(() => {
+      setSessionGraceElapsed(true);
+    }, SESSION_SYNC_GRACE_MS);
 
-    navigate(buildLoginRedirectUrl(location.pathname, location.search, location.hash), {
-      replace: true,
-    });
-  }, [isLoaded, isPublicRoute, isSignedIn, location.pathname, location.search, location.hash, navigate]);
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [isLoaded]);
 
   if (isPublicRoute) {
     return children;
@@ -88,11 +86,37 @@ function ClerkAuthGateInner({ children }: { children: ReactNode }) {
   }
 
   if (!isSignedIn) {
+    if (!sessionGraceElapsed) {
+      return (
+        <AuthStatusScreen
+          title={localize('com_ui_clerk_loading_title')}
+          description={localize('com_ui_clerk_syncing_desc')}
+          action={<Spinner className="mx-auto h-8 w-8" />}
+        />
+      );
+    }
+
+    const signInUrl = import.meta.env.VITE_CLERK_SIGN_IN_URL as string | undefined;
+    const returnUrl = `${window.location.origin}${location.pathname}${location.search}${location.hash}`;
+
     return (
       <AuthStatusScreen
-        title={localize('com_ui_clerk_loading_title')}
-        description={localize('com_ui_clerk_loading_desc')}
-        action={<Spinner className="mx-auto h-8 w-8" />}
+        title={localize('com_ui_clerk_sign_in_required_title')}
+        description={localize('com_ui_clerk_sign_in_required_desc')}
+        action={
+          signInUrl ? (
+            <Button
+              type="button"
+              onClick={() => {
+                const target = new URL(signInUrl);
+                target.searchParams.set('redirect_url', returnUrl);
+                window.location.assign(target.toString());
+              }}
+            >
+              {localize('com_ui_clerk_continue_sign_in')}
+            </Button>
+          ) : undefined
+        }
       />
     );
   }
@@ -121,15 +145,16 @@ function ClerkAuthGateInner({ children }: { children: ReactNode }) {
         title={localize('com_ui_clerk_exchange_failed_title')}
         description={bridgeError ?? localize('com_ui_clerk_exchange_failed_desc')}
         action={
-          signInUrl ? (
-            <Button type="button" variant="outline" onClick={() => window.location.assign(signInUrl)}>
-              {localize('com_ui_clerk_try_again')}
-            </Button>
-          ) : (
+          <div className="flex flex-col gap-2">
             <Button type="button" variant="outline" onClick={() => window.location.reload()}>
               {localize('com_ui_refresh_page')}
             </Button>
-          )
+            {signInUrl ? (
+              <Button type="button" variant="ghost" onClick={() => window.location.assign(signInUrl)}>
+                {localize('com_ui_clerk_try_again')}
+              </Button>
+            ) : null}
+          </div>
         }
       />
     );
