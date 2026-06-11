@@ -1,15 +1,14 @@
 import { useLocation } from 'react-router-dom';
 import type { NavLink } from '~/common';
 import { useActivePanel, resolveActivePanel } from '~/Providers';
-
-const AGENT_OPS_FULL_PAGE_PATTERN = /^\/(home|connectors|artifacts|spaces)(\/|$)/;
+import { isAgentOpsFullPageRoute } from '~/utils/agentOpsRoutes';
 
 export default function Nav({ links }: { links: NavLink[] }) {
   const { pathname } = useLocation();
   const { active } = useActivePanel();
   const effectiveActive = resolveActivePanel(active, links);
 
-  if (AGENT_OPS_FULL_PAGE_PATTERN.test(pathname)) {
+  if (isAgentOpsFullPageRoute(pathname)) {
     return null;
   }
 

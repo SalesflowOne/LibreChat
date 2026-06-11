@@ -19,6 +19,11 @@ module.exports = {
     //   mono: ['Söhne Mono', 'monospace'],
     // },
     extend: {
+      gridTemplateColumns: {
+        'agentops-stats': 'repeat(auto-fill, minmax(min(100%, 220px), 1fr))',
+        'agentops-panels': 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',
+        'agentops-cards': 'repeat(auto-fill, minmax(min(100%, 260px), 1fr))',
+      },
       width: {
         authPageWidth: '370px',
       },

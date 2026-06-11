@@ -133,15 +133,15 @@ function StatCard({
   return (
     <Link
       to={to}
-      className="group min-w-0 rounded-2xl border border-border-light bg-surface-primary p-5 transition hover:border-border-medium hover:bg-surface-secondary"
+      className="group w-full min-w-0 rounded-2xl border border-border-light bg-surface-primary p-4 sm:p-5 transition hover:border-border-medium hover:bg-surface-secondary"
     >
       <div className="flex items-center justify-between">
         <Icon className="h-5 w-5 text-text-secondary" aria-hidden="true" />
         <ArrowRight className="h-4 w-4 text-text-secondary opacity-0 transition group-hover:opacity-100" />
       </div>
       <p className="mt-4 text-3xl font-semibold text-text-primary">{value}</p>
-      <p className="mt-1 text-sm font-medium text-text-primary">{title}</p>
-      <p className="mt-2 line-clamp-3 text-xs leading-relaxed text-text-secondary">{hint}</p>
+      <p className="mt-1 truncate text-sm font-medium text-text-primary">{title}</p>
+      <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-text-secondary">{hint}</p>
     </Link>
   );
 }

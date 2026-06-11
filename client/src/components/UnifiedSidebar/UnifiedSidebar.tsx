@@ -1,8 +1,10 @@
 import { useCallback, useState, useEffect, useRef, memo, startTransition } from 'react';
 import type { ReactNode } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useRecoilState } from 'recoil';
 import { useForm } from 'react-hook-form';
 import { useMediaQuery } from '@librechat/client';
+import { isAgentOpsFullPageRoute } from '~/utils/agentOpsRoutes';
 import type { ChatFormValues } from '~/common';
 import { ChatContext, ChatFormProvider, ActivePanelProvider } from '~/Providers';
 import useUnifiedSidebarLinks from '~/hooks/Nav/useUnifiedSidebarLinks';
@@ -42,8 +44,11 @@ function SidebarChatProvider({ children }: { children: ReactNode }) {
 
 function UnifiedSidebar() {
   const localize = useLocalize();
+  const { pathname } = useLocation();
   const isSmallScreen = useMediaQuery('(max-width: 768px)');
+  const isAgentOpsFullPage = isAgentOpsFullPageRoute(pathname);
   const [expanded, setExpanded] = useRecoilState(store.sidebarExpanded);
+  const showExpandedSidebar = expanded && !isAgentOpsFullPage;
   const [sidebarWidth, setSidebarWidth] = useState(getInitialWidth);
   const [isResizing, setIsResizing] = useState(false);
   const resizeHandlers = useRef<{ move: (e: MouseEvent) => void; up: () => void } | null>(null);
@@ -57,10 +62,13 @@ function UnifiedSidebar() {
   }, [setExpanded]);
 
   const handleExpand = useCallback(() => {
+    if (isAgentOpsFullPageRoute(pathname)) {
+      return;
+    }
     startTransition(() => {
       setExpanded(true);
     });
-  }, [setExpanded]);
+  }, [pathname, setExpanded]);
 
   const handleResizeStart = useCallback(() => {
     setIsResizing(true);
@@ -183,9 +191,9 @@ function UnifiedSidebar() {
         <aside
           className="relative flex h-full flex-shrink-0 overflow-hidden"
           style={{
-            width: expanded ? sidebarWidth : COLLAPSED_WIDTH,
-            minWidth: expanded ? EXPANDED_MIN : COLLAPSED_WIDTH,
-            maxWidth: expanded ? '40%' : COLLAPSED_WIDTH,
+            width: showExpandedSidebar ? sidebarWidth : COLLAPSED_WIDTH,
+            minWidth: showExpandedSidebar ? EXPANDED_MIN : COLLAPSED_WIDTH,
+            maxWidth: showExpandedSidebar ? '40%' : COLLAPSED_WIDTH,
             transition: isResizing
               ? 'none'
               : `width ${TRANSITION_MS}ms ${EASING}, min-width ${TRANSITION_MS}ms ${EASING}, max-width ${TRANSITION_MS}ms ${EASING}`,
@@ -194,7 +202,7 @@ function UnifiedSidebar() {
         >
           <Sidebar
             links={links}
-            expanded={expanded}
+            expanded={showExpandedSidebar}
             onCollapse={handleCollapse}
             onExpand={handleExpand}
             onResizeStart={handleResizeStart}
