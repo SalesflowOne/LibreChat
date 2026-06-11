@@ -698,6 +698,7 @@ export const exchangeSupabaseSession = async (
         Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
+      timeout: 15_000,
     },
   );
   return response.data;

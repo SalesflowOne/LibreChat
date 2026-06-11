@@ -14,9 +14,13 @@ const { getRumConfig } = require('~/server/services/Config/rum');
 const { getAppConfig } = require('~/server/services/Config/app');
 
 const router = express.Router();
+const supabaseAuthEnabled = isEnabled(process.env.SUPABASE_AUTH_ENABLED);
 const emailLoginEnabled =
-  process.env.ALLOW_EMAIL_LOGIN === undefined || isEnabled(process.env.ALLOW_EMAIL_LOGIN);
-const passwordResetEnabled = isEnabled(process.env.ALLOW_PASSWORD_RESET);
+  supabaseAuthEnabled ||
+  process.env.ALLOW_EMAIL_LOGIN === undefined ||
+  isEnabled(process.env.ALLOW_EMAIL_LOGIN);
+const passwordResetEnabled =
+  supabaseAuthEnabled || isEnabled(process.env.ALLOW_PASSWORD_RESET);
 
 const sharedLinksEnabled =
   process.env.ALLOW_SHARED_LINKS === undefined || isEnabled(process.env.ALLOW_SHARED_LINKS);

@@ -9,13 +9,20 @@ import { validateEmail } from '~/utils';
 import { useLocalize } from '~/hooks';
 
 type TLoginFormProps = {
-  onSubmit: (data: TLoginUser) => void;
+  onSubmit: (data: TLoginUser) => void | Promise<void>;
   startupConfig: TStartupConfig;
   error: Pick<TAuthContext, 'error'>['error'];
   setError: Pick<TAuthContext, 'setError'>['setError'];
+  isLoggingIn?: boolean;
 };
 
-const LoginForm: React.FC<TLoginFormProps> = ({ onSubmit, startupConfig, error, setError }) => {
+const LoginForm: React.FC<TLoginFormProps> = ({
+  onSubmit,
+  startupConfig,
+  error,
+  setError,
+  isLoggingIn = false,
+}) => {
   const localize = useLocalize();
   const { theme } = useContext(ThemeContext);
   const {
@@ -85,7 +92,9 @@ const LoginForm: React.FC<TLoginFormProps> = ({ onSubmit, startupConfig, error, 
         className="mt-6"
         aria-label="Login form"
         method="POST"
-        onSubmit={handleSubmit((data) => onSubmit(data))}
+        onSubmit={handleSubmit(async (data) => {
+          await onSubmit(data);
+        })}
       >
         <div className="mb-4">
           <div className="relative">
@@ -173,11 +182,11 @@ const LoginForm: React.FC<TLoginFormProps> = ({ onSubmit, startupConfig, error, 
             aria-label={localize('com_auth_continue')}
             data-testid="login-button"
             type="submit"
-            disabled={(requireCaptcha && !turnstileToken) || isSubmitting}
+            disabled={(requireCaptcha && !turnstileToken) || isSubmitting || isLoggingIn}
             variant="submit"
             className="h-12 w-full rounded-2xl"
           >
-            {isSubmitting ? <Spinner /> : localize('com_auth_continue')}
+            {isSubmitting || isLoggingIn ? <Spinner /> : localize('com_auth_continue')}
           </Button>
         </div>
       </form>

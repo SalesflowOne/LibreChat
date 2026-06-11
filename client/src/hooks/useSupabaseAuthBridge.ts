@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useSetRecoilState } from 'recoil';
-import { dataService, setTokenHeader } from 'librechat-data-provider';
+import { dataService, getTokenHeader, setTokenHeader } from 'librechat-data-provider';
 import { getAccessToken, isSupabaseAuthEnabled, onAuthStateChange } from '~/lib/auth';
 import store from '~/store';
 
@@ -36,6 +36,12 @@ export function useSupabaseAuthBridge({
 
     const runExchange = async () => {
       if (exchangePhaseRef.current === 'pending' || exchangePhaseRef.current === 'done') {
+        return;
+      }
+
+      if (getTokenHeader()) {
+        exchangePhaseRef.current = 'done';
+        setBridgeState('ready');
         return;
       }
 
@@ -92,7 +98,7 @@ export function useSupabaseAuthBridge({
         return;
       }
 
-      if (exchangePhaseRef.current === 'done') {
+      if (exchangePhaseRef.current === 'done' || getTokenHeader()) {
         return;
       }
 

@@ -8,6 +8,7 @@ import { ErrorMessage } from '~/components/Auth/ErrorMessage';
 import SocialButton from '~/components/Auth/SocialButton';
 import { useAuthContext } from '~/hooks/AuthContext';
 import { useLocalize } from '~/hooks';
+import { isSupabaseAuthEnabled } from '~/lib/auth';
 import LoginForm from './LoginForm';
 
 interface LoginLocationState {
@@ -17,7 +18,7 @@ interface LoginLocationState {
 function Login() {
   const localize = useLocalize();
   const { showToast } = useToastContext();
-  const { error, setError, login } = useAuthContext();
+  const { error, setError, login, isLoggingIn } = useAuthContext();
   const { startupConfig } = useOutletContext<TLoginLayoutContext>();
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -100,13 +101,20 @@ function Login() {
 
   return (
     <>
-      {error != null && <ErrorMessage>{localize(getLoginError(error))}</ErrorMessage>}
-      {startupConfig?.emailLoginEnabled === true && (
+      {error != null && (
+        <ErrorMessage>
+          {isSupabaseAuthEnabled() && !/\b[45]\d{2}\b/.test(error)
+            ? error
+            : localize(getLoginError(error))}
+        </ErrorMessage>
+      )}
+      {(startupConfig?.emailLoginEnabled === true || isSupabaseAuthEnabled()) && (
         <LoginForm
           onSubmit={login}
           startupConfig={startupConfig}
           error={error}
           setError={setError}
+          isLoggingIn={isLoggingIn}
         />
       )}
       {startupConfig?.registrationEnabled === true && (

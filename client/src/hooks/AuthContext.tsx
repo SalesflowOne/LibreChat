@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   apiBaseUrl,
   SystemRoles,
+  getTokenHeader,
   setTokenHeader,
   isSystemRoleName,
   buildLoginRedirectUrl,
@@ -53,7 +54,10 @@ const AuthContextProvider = ({
   const [token, setToken] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | undefined>(undefined);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
   const setQueriesEnabled = useSetRecoilState<boolean>(store.queriesEnabled);
+  const setBridgeState = useSetRecoilState(store.authBridgeState);
+  const setBridgeError = useSetRecoilState(store.authBridgeError);
 
   const userRoleName = user?.role ?? '';
   const isCustomRole = isAuthenticated && !!user?.role && !isSystemRoleName(user.role);
@@ -179,45 +183,75 @@ const AuthContextProvider = ({
 
   const userQuery = useGetUserQuery({ enabled: !!(token ?? '') });
 
-  const login = (data: t.TLoginUser) => {
-    if (isSupabaseAuthEnabled()) {
-      void (async () => {
+  const login = useCallback(
+    async (data: t.TLoginUser) => {
+      if (isSupabaseAuthEnabled()) {
+        setIsLoggingIn(true);
+        setError(undefined);
+        setBridgeError(null);
+
         try {
-          setError(undefined);
           await signIn(data.email, data.password ?? '');
           const accessToken = await getAccessToken();
           if (!accessToken) {
             throw new Error('Sign in succeeded but no session was returned.');
           }
-          const result = await dataService.exchangeSupabaseSession(accessToken);
-          setUserContext({
-            token: result.token,
-            isAuthenticated: true,
-            user: result.user as t.TUser,
-            redirect: '/home',
-          });
-        } catch (loginError) {
-          const message =
-            loginError instanceof Error ? loginError.message : 'Sign in failed. Please try again.';
-          doSetError(message);
-        }
-      })();
-      return;
-    }
 
-    loginUser.mutate(data);
-  };
+          const result = await dataService.exchangeSupabaseSession(accessToken);
+          setTokenHeader(result.token);
+          setBridgeState('ready');
+          setBridgeError(null);
+          setUser(result.user as t.TUser);
+          setToken(result.token);
+          setIsAuthenticated(true);
+          setQueriesEnabled(true);
+
+          const searchParams = new URLSearchParams(window.location.search);
+          const postLoginRedirect = getPostLoginRedirect(searchParams);
+          const redirect =
+            postLoginRedirect ?? (isSafeRedirect('/home') ? '/home' : '/c/new');
+          navigate(redirect, { replace: true });
+        } catch (loginError) {
+          setTokenHeader(undefined);
+          setBridgeState('idle');
+          let message = 'Sign in failed. Please try again.';
+          if (loginError instanceof Error) {
+            message = loginError.message;
+          }
+          if (
+            typeof loginError === 'object' &&
+            loginError != null &&
+            'code' in loginError &&
+            loginError.code === 'ECONNABORTED'
+          ) {
+            message =
+              'The workspace API took too long to respond. Please try again in a moment.';
+          }
+          setError(message);
+        } finally {
+          setIsLoggingIn(false);
+        }
+        return;
+      }
+
+      loginUser.mutate(data);
+    },
+    [loginUser, navigate, setBridgeError, setBridgeState, setQueriesEnabled, setUser],
+  );
 
   const handleSupabaseAuthenticated = useCallback(
     (nextToken: string, nextUser: Record<string, unknown>) => {
+      if (getTokenHeader() === `Bearer ${nextToken}`) {
+        return;
+      }
+
       setError(undefined);
-      setUserContext({
-        token: nextToken,
-        isAuthenticated: true,
-        user: nextUser as t.TUser,
-      });
+      setUser(nextUser as t.TUser);
+      setToken(nextToken);
+      setIsAuthenticated(true);
+      setQueriesEnabled(true);
     },
-    [setUserContext],
+    [setQueriesEnabled, setUser],
   );
 
   const handleSupabaseSignedOut = useCallback(() => {
@@ -342,13 +376,17 @@ const AuthContextProvider = ({
         ...(isCustomRole && customRole ? { [userRoleName]: customRole } : {}),
       },
       isAuthenticated,
+      isLoggingIn,
     }),
 
     [
       user,
       error,
       isAuthenticated,
+      isLoggingIn,
       token,
+      login,
+      logout,
       userRole,
       adminRole,
       isCustomRole,

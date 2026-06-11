@@ -37,8 +37,8 @@ services:
       SUPABASE_SERVICE_ROLE_KEY: '${SUPABASE_SERVICE_ROLE_KEY}'
       DOMAIN_CLIENT: 'https://artemiis.one'
       DOMAIN_SERVER: 'http://api-ysoisbo6gtf0sbmokrhoqfm2.5.161.212.253.sslip.io'
-      ALLOW_REGISTRATION: 'false'
-      ALLOW_EMAIL_LOGIN: 'false'
+      ALLOW_REGISTRATION: 'true'
+      ALLOW_EMAIL_LOGIN: 'true'
       # Sign-up/login handled by Supabase Auth on the frontend; API uses JWT exchange.
       MONGO_URI: 'mongodb://mongodb:27017/LibreChat'
       MEILI_HOST: 'http://meilisearch:7700'
