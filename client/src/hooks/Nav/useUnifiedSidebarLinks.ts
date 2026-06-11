@@ -1,12 +1,13 @@
 import { useMemo } from 'react';
 import { useRecoilValue } from 'recoil';
-import { LayoutDashboard, MessagesSquare } from 'lucide-react';
+import { LayoutDashboard, MessagesSquare, PlugZap } from 'lucide-react';
 import { useUserKeyQuery } from 'librechat-data-provider/react-query';
 import { getConfigDefaults, getEndpointField } from 'librechat-data-provider';
 import type { TEndpointsConfig } from 'librechat-data-provider';
 import type { NavLink } from '~/common';
 import ConversationsSection from '~/components/UnifiedSidebar/ConversationsSection';
 import CommandCenter from '~/components/AgentOps/CommandCenter';
+import ConnectorHubPanel from '~/components/AgentOps/ConnectorHubPanel';
 import { useGetEndpointsQuery, useGetStartupConfig } from '~/data-provider';
 import useSideNavLinks from '~/hooks/Nav/useSideNavLinks';
 import store from '~/store';
@@ -59,6 +60,14 @@ export default function useUnifiedSidebarLinks() {
       Component: CommandCenter,
     };
 
+    const connectorsLink: NavLink = {
+      title: 'com_ui_agentops_connectors',
+      label: '',
+      icon: PlugZap,
+      id: 'connector-hub',
+      Component: ConnectorHubPanel,
+    };
+
     const conversationLink: NavLink = {
       title: 'com_ui_chat_history',
       label: '',
@@ -67,7 +76,7 @@ export default function useUnifiedSidebarLinks() {
       Component: ConversationsSection,
     };
 
-    return [homeLink, conversationLink, ...sideNavLinks];
+    return [homeLink, connectorsLink, conversationLink, ...sideNavLinks];
   }, [sideNavLinks]);
 
   return links;

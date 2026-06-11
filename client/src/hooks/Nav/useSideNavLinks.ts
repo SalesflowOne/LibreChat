@@ -6,7 +6,6 @@ import {
   Bookmark,
   Boxes,
   NotebookPen,
-  PlugZap,
   Rocket,
   ScrollText,
   ArrowRightToLine,
@@ -29,10 +28,8 @@ import {
   useHasAccess,
 } from '~/hooks';
 import MCPBuilderPanel from '~/components/SidePanel/MCPBuilder/MCPBuilderPanel';
-import ConnectorHubPanel from '~/components/AgentOps/ConnectorHubPanel';
 import ArtifactGalleryPanel from '~/components/AgentOps/ArtifactGalleryPanel';
 import SpacesPanel from '~/components/AgentOps/SpacesPanel';
-import { usePipedreamStatusQuery } from '~/data-provider/Pipedream';
 import AgentPanelSwitch from '~/components/SidePanel/Agents/AgentPanelSwitch';
 import BookmarkPanel from '~/components/SidePanel/Bookmarks/BookmarkPanel';
 import PanelSwitch from '~/components/SidePanel/Builder/PanelSwitch';
@@ -96,7 +93,6 @@ export default function useSideNavLinks({
     permission: Permissions.CREATE,
   });
   const { availableMCPServers } = useMCPServerManager();
-  const { data: pipedreamStatus } = usePipedreamStatusQuery(hasAccessToUseMCPSettings);
 
   const { agentsConfig } = useGetAgentsConfig({ endpointsConfig });
   const { skillsEnabled } = useAgentCapabilities(agentsConfig?.capabilities);
@@ -201,16 +197,6 @@ export default function useSideNavLinks({
       });
     }
 
-    if (hasAccessToUseMCPSettings && pipedreamStatus?.enabled) {
-      links.push({
-        title: 'com_ui_agentops_connectors',
-        label: '',
-        icon: PlugZap,
-        id: 'connector-hub',
-        Component: ConnectorHubPanel,
-      });
-    }
-
     links.push({
       title: 'com_ui_agentops_artifacts',
       label: '',
@@ -268,7 +254,6 @@ export default function useSideNavLinks({
     availableMCPServers,
     hasAccessToUseMCPSettings,
     hasAccessToCreateMCP,
-    pipedreamStatus?.enabled,
     includeHidePanel,
     hidePanel,
   ]);
