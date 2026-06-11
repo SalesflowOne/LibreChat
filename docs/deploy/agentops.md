@@ -33,6 +33,27 @@ SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=eyJ...
 DOMAIN_CLIENT=https://artemiis.one
 DOMAIN_SERVER=https://api.artemiis.one
+PIPEDREAM_CLIENT_ID=...
+PIPEDREAM_CLIENT_SECRET=...
+PIPEDREAM_PROJECT_ID=proj_...
+PIPEDREAM_ENVIRONMENT=development
+```
+
+### Pipedream Connect (borrow from Vercel)
+
+Pipedream credentials already exist on Vercel **`salesflow/agentops-mcp-chat`** (and `vercelchatbot`) as sensitive env vars:
+
+- `PIPEDREAM_CLIENT_ID`
+- `PIPEDREAM_CLIENT_SECRET`
+- `PIPEDREAM_PROJECT_ID`
+- `PIPEDREAM_PROJECT_ENVIRONMENT` (maps to `PIPEDREAM_ENVIRONMENT` on the API)
+
+They are **not** present on any Coolify app today. Copy them into Coolify service **`librechat-vercel`** (`ysoisbo6gtf0sbmokrhoqfm2`), then redeploy the API.
+
+With a Vercel token that can decrypt sensitive env vars:
+
+```bash
+VERCEL_TOKEN=... COOLIFY_API_TOKEN=... COOLIFY_URL=... node scripts/sync-pipedream-env.mjs
 ```
 
 ### Supabase database

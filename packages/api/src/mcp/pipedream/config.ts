@@ -49,6 +49,13 @@ export function isPipedreamProjectConfigured(): boolean {
   return isPipedreamConfigured() && Boolean(process.env.PIPEDREAM_PROJECT_ID?.trim());
 }
 
+export function resolvePipedreamEnvironment(): 'development' | 'production' {
+  const raw =
+    process.env.PIPEDREAM_ENVIRONMENT?.trim() ||
+    process.env.PIPEDREAM_PROJECT_ENVIRONMENT?.trim();
+  return raw === 'production' ? 'production' : 'development';
+}
+
 export function resolvePipedreamRuntimeConfig(
   yamlConfig?: PipedreamYamlConfig | null,
 ): PipedreamRuntimeConfig | null {
@@ -62,8 +69,7 @@ export function resolvePipedreamRuntimeConfig(
 
   const apps = yamlConfig?.apps?.length ? yamlConfig.apps : parseAppsFromEnv();
 
-  const environment =
-    process.env.PIPEDREAM_ENVIRONMENT === 'production' ? 'production' : 'development';
+  const environment = resolvePipedreamEnvironment();
 
   return {
     enabled: true,

@@ -50,6 +50,15 @@ describe('Pipedream config', () => {
     });
   });
 
+  it('reads PIPEDREAM_PROJECT_ENVIRONMENT as an alias for PIPEDREAM_ENVIRONMENT', () => {
+    delete process.env.PIPEDREAM_ENVIRONMENT;
+    process.env.PIPEDREAM_PROJECT_ENVIRONMENT = 'production';
+
+    const runtime = resolvePipedreamRuntimeConfig({ enabled: true });
+
+    expect(runtime?.environment).toBe('production');
+  });
+
   it('returns null when project credentials are missing', () => {
     delete process.env.PIPEDREAM_PROJECT_ID;
 
