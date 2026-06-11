@@ -17,11 +17,13 @@ import {
   SetConvoProvider,
   FileMapContext,
 } from '~/Providers';
+import { Spinner } from '@librechat/client';
 import { useUserTermsQuery, useGetStartupConfig } from '~/data-provider';
 import { UnifiedSidebar } from '~/components/UnifiedSidebar';
 import { TermsAndConditionsModal } from '~/components/ui';
 import { useHealthCheck } from '~/data-provider';
 import { Banner } from '~/components/Banners';
+import useAuthRedirect from './useAuthRedirect';
 
 export default function Root() {
   const [showTerms, setShowTerms] = useState(false);
@@ -30,6 +32,7 @@ export default function Root() {
   const isSmallScreen = useMediaQuery('(max-width: 768px)');
 
   const { isAuthenticated, logout } = useAuthContext();
+  useAuthRedirect();
 
   useHealthCheck(isAuthenticated);
 
@@ -60,7 +63,15 @@ export default function Root() {
   };
 
   if (!isAuthenticated) {
-    return null;
+    return (
+      <div
+        className="flex h-full min-h-[50vh] items-center justify-center bg-surface-primary"
+        aria-live="polite"
+        role="status"
+      >
+        <Spinner className="h-8 w-8 text-text-primary" />
+      </div>
+    );
   }
 
   return (

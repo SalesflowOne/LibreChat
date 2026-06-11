@@ -5,18 +5,54 @@ import type {
   PipedreamStatusResponse,
 } from 'librechat-data-provider';
 
+const disabledPipedreamStatus: PipedreamStatusResponse = {
+  enabled: false,
+  apps: [],
+};
+
+const emptyPipedreamAccounts: PipedreamAccountsResponse = {
+  accounts: [],
+};
+
+const isNotFoundError = (error: unknown): boolean =>
+  typeof error === 'object' &&
+  error !== null &&
+  'response' in error &&
+  typeof (error as { response?: { status?: number } }).response?.status === 'number' &&
+  (error as { response: { status: number } }).response.status === 404;
+
 export const usePipedreamStatusQuery = (enabled = true) =>
   useQuery<PipedreamStatusResponse>({
     queryKey: [QueryKeys.pipedreamStatus],
-    queryFn: () => dataService.getPipedreamStatus(),
+    queryFn: async () => {
+      try {
+        return await dataService.getPipedreamStatus();
+      } catch (error) {
+        if (isNotFoundError(error)) {
+          return disabledPipedreamStatus;
+        }
+        throw error;
+      }
+    },
     enabled,
     staleTime: 60_000,
+    retry: false,
   });
 
 export const usePipedreamAccountsQuery = (enabled = true) =>
   useQuery<PipedreamAccountsResponse>({
     queryKey: [QueryKeys.pipedreamAccounts],
-    queryFn: () => dataService.getPipedreamAccounts(),
+    queryFn: async () => {
+      try {
+        return await dataService.getPipedreamAccounts();
+      } catch (error) {
+        if (isNotFoundError(error)) {
+          return emptyPipedreamAccounts;
+        }
+        throw error;
+      }
+    },
     enabled,
     staleTime: 30_000,
+    retry: false,
   });
