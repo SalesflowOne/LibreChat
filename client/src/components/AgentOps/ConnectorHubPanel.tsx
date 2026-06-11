@@ -4,6 +4,7 @@ import { Button, Spinner } from '@librechat/client';
 import { useLocalize } from '~/hooks';
 import {
   usePipedreamAccountsQuery,
+  usePipedreamAppsQuery,
   usePipedreamStatusQuery,
 } from '~/data-provider/Pipedream';
 import IntegrationCard from './integrations/IntegrationCard';
@@ -11,8 +12,10 @@ import IntegrationCard from './integrations/IntegrationCard';
 export default function ConnectorHubPanel() {
   const localize = useLocalize();
   const { data: status, isLoading: isStatusLoading } = usePipedreamStatusQuery();
+  const pipedreamEnabled = Boolean(status?.enabled);
+  const { data: appsData, isLoading: isAppsLoading } = usePipedreamAppsQuery(undefined, pipedreamEnabled);
   const { data: accountsData, isLoading: isAccountsLoading } = usePipedreamAccountsQuery(
-    Boolean(status?.enabled),
+    pipedreamEnabled,
   );
 
   if (isStatusLoading) {
@@ -24,7 +27,7 @@ export default function ConnectorHubPanel() {
   }
 
   const accounts = accountsData?.accounts ?? [];
-  const apps = status?.apps ?? [];
+  const apps = appsData?.apps ?? [];
   const connectedApps = apps.filter((app) =>
     accounts.some((account) => account.appSlug === app.slug && !account.dead),
   );
@@ -38,11 +41,11 @@ export default function ConnectorHubPanel() {
           <p className="text-xs text-text-secondary">{localize('com_ui_integrations_sidebar_help')}</p>
         </div>
 
-        {!status?.enabled || apps.length === 0 ? (
+        {!pipedreamEnabled ? (
           <p className="px-1 text-sm text-text-secondary">
             {localize('com_ui_integrations_not_configured_desc')}
           </p>
-        ) : isAccountsLoading ? (
+        ) : isAppsLoading || isAccountsLoading ? (
           <div className="flex justify-center py-4">
             <Spinner className="h-5 w-5" />
           </div>

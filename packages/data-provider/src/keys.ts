@@ -63,6 +63,7 @@ export enum QueryKeys {
   mcpServers = 'mcpServers',
   mcpServer = 'mcpServer',
   pipedreamStatus = 'pipedreamStatus',
+  pipedreamApps = 'pipedreamApps',
   pipedreamAccounts = 'pipedreamAccounts',
   artifacts = 'artifacts',
   artifact = 'artifact',

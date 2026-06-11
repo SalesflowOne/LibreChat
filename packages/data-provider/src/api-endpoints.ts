@@ -212,6 +212,17 @@ export const mcpOAuthBind = (serverName: string) => `${BASE_URL}/api/mcp/${serve
 
 export const pipedream = {
   status: () => `${BASE_URL}/api/pipedream/status`,
+  apps: (params?: { q?: string; limit?: number }) => {
+    const search = new URLSearchParams();
+    if (params?.q?.trim()) {
+      search.set('q', params.q.trim());
+    }
+    if (params?.limit != null) {
+      search.set('limit', String(params.limit));
+    }
+    const query = search.toString();
+    return `${BASE_URL}/api/pipedream/apps${query ? `?${query}` : ''}`;
+  },
   accounts: (appSlug?: string) =>
     `${BASE_URL}/api/pipedream/accounts${appSlug ? `?app=${encodeURIComponent(appSlug)}` : ''}`,
   connectToken: () => `${BASE_URL}/api/pipedream/connect-token`,

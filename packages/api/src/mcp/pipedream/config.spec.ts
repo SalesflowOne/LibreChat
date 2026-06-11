@@ -39,6 +39,32 @@ describe('Pipedream config', () => {
     process.env.PIPEDREAM_APPS = originalApps;
   });
 
+  it('enables runtime config with empty apps when project credentials are set', () => {
+    const runtime = resolvePipedreamRuntimeConfig({ enabled: true });
+
+    expect(runtime).toEqual({
+      enabled: true,
+      projectId: 'proj_test',
+      environment: 'development',
+      apps: [],
+    });
+  });
+
+  it('reads PIPEDREAM_PROJECT_ENVIRONMENT as an alias for PIPEDREAM_ENVIRONMENT', () => {
+    delete process.env.PIPEDREAM_ENVIRONMENT;
+    process.env.PIPEDREAM_PROJECT_ENVIRONMENT = 'production';
+
+    const runtime = resolvePipedreamRuntimeConfig({ enabled: true });
+
+    expect(runtime?.environment).toBe('production');
+  });
+
+  it('returns null when project credentials are missing', () => {
+    delete process.env.PIPEDREAM_PROJECT_ID;
+
+    expect(resolvePipedreamRuntimeConfig({ enabled: true })).toBeNull();
+  });
+
   it('builds runtime config from yaml apps', () => {
     const runtime = resolvePipedreamRuntimeConfig({
       enabled: true,

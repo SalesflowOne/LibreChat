@@ -4,6 +4,7 @@ import { Spinner } from '@librechat/client';
 import { useLocalize } from '~/hooks';
 import {
   usePipedreamAccountsQuery,
+  usePipedreamAppsQuery,
   usePipedreamStatusQuery,
 } from '~/data-provider/Pipedream';
 import PipedreamConnectorCard from './PipedreamConnectorCard';
@@ -13,8 +14,10 @@ export default function PipedreamConnectorsPanel() {
   const [connectingAppSlug, setConnectingAppSlug] = useState<string | null>(null);
 
   const { data: status, isLoading: isStatusLoading } = usePipedreamStatusQuery();
+  const pipedreamEnabled = Boolean(status?.enabled);
+  const { data: appsData, isLoading: isAppsLoading } = usePipedreamAppsQuery(undefined, pipedreamEnabled);
   const { data: accountsData, isLoading: isAccountsLoading } = usePipedreamAccountsQuery(
-    Boolean(status?.enabled),
+    pipedreamEnabled,
   );
 
   if (isStatusLoading) {
@@ -25,7 +28,7 @@ export default function PipedreamConnectorsPanel() {
     );
   }
 
-  if (!status?.enabled || status.apps.length === 0) {
+  if (!status?.enabled) {
     return (
       <div className="px-3 py-4 text-sm text-text-secondary">
         {localize('com_ui_pipedream_not_configured')}
@@ -34,6 +37,7 @@ export default function PipedreamConnectorsPanel() {
   }
 
   const accounts = accountsData?.accounts ?? [];
+  const apps = appsData?.apps ?? [];
 
   return (
     <div className="flex h-auto w-full flex-col px-3 pb-3 pt-2">
@@ -43,13 +47,15 @@ export default function PipedreamConnectorsPanel() {
           <p className="text-xs text-text-secondary">{localize('com_ui_pipedream_panel_help')}</p>
         </div>
 
-        {isAccountsLoading ? (
+        {isAppsLoading || isAccountsLoading ? (
           <div className="flex justify-center py-4">
             <Spinner className="h-5 w-5" />
           </div>
+        ) : apps.length === 0 ? (
+          <p className="text-xs text-text-secondary">{localize('com_ui_integrations_no_results')}</p>
         ) : (
           <div className="space-y-2" role="list">
-            {status.apps.map((app) => (
+            {apps.map((app) => (
               <PipedreamConnectorCard
                 key={app.slug}
                 app={app}
