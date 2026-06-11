@@ -97,7 +97,7 @@ export function useClerkAuthBridge({
       }, EXCHANGE_TIMEOUT_MS);
 
       try {
-        const clerkToken = await getToken();
+        const clerkToken = orgId ? await getToken({ organizationId: orgId }) : await getToken();
         if (cancelled) {
           return;
         }

@@ -2,6 +2,7 @@ import { SystemRoles } from 'librechat-data-provider';
 import { logger } from '@librechat/data-schemas';
 import type { IUser } from '@librechat/data-schemas';
 import type { ClerkExchangeResult, ClerkTokenClaims } from './types';
+import { resolveClerkOrganizationId } from './org';
 import { verifyClerkToken } from './verify';
 
 export interface ClerkUserStore {
@@ -43,7 +44,7 @@ export async function exchangeClerkSession({
   }
 
   const email = resolveEmail(claims);
-  const tenantId = claims.org_id?.trim();
+  const tenantId = await resolveClerkOrganizationId(claims);
 
   if (!tenantId) {
     logger.warn('[Clerk] Exchange rejected: user has no active organization');
