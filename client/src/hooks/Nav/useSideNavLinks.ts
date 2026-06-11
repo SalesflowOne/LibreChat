@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { MCPIcon, AttachmentIcon, OpenAIMinimalIcon } from '@librechat/client';
 import {
   Bot,
@@ -56,6 +57,7 @@ export default function useSideNavLinks({
   endpointsConfig: TEndpointsConfig;
   includeHidePanel?: boolean;
 }) {
+  const navigate = useNavigate();
   const hasAccessToPrompts = useHasAccess({
     permissionType: PermissionTypes.PROMPTS,
     permission: Permissions.USE,
@@ -203,6 +205,7 @@ export default function useSideNavLinks({
       icon: Boxes,
       id: 'artifacts-gallery',
       Component: ArtifactGalleryPanel,
+      onClick: () => navigate('/artifacts'),
     });
 
     links.push({
@@ -211,6 +214,7 @@ export default function useSideNavLinks({
       icon: Rocket,
       id: 'spaces',
       Component: SpacesPanel,
+      onClick: () => navigate('/spaces'),
     });
 
     if (
@@ -256,6 +260,7 @@ export default function useSideNavLinks({
     hasAccessToCreateMCP,
     includeHidePanel,
     hidePanel,
+    navigate,
   ]);
 
   return Links;

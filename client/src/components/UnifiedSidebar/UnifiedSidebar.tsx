@@ -9,6 +9,7 @@ import useUnifiedSidebarLinks from '~/hooks/Nav/useUnifiedSidebarLinks';
 import { useChatHelpers, useLocalize } from '~/hooks';
 import SidePanelNav from '~/components/SidePanel/Nav';
 import ExpandedPanel from './ExpandedPanel';
+import SidebarRouteSync from './SidebarRouteSync';
 import Sidebar from './Sidebar';
 import { cn } from '~/utils';
 import store from '~/store';
@@ -148,6 +149,7 @@ function UnifiedSidebar() {
         >
           <SidebarChatProvider>
             <ActivePanelProvider>
+              <SidebarRouteSync />
               <ExpandedPanel links={links} onCollapse={handleCollapse} />
               <nav className="min-h-0 flex-1 overflow-hidden bg-surface-primary-alt">
                 <SidePanelNav links={links} />
@@ -177,6 +179,7 @@ function UnifiedSidebar() {
   return (
     <SidebarChatProvider>
       <ActivePanelProvider>
+        <SidebarRouteSync />
         <aside
           className="relative flex h-full flex-shrink-0 overflow-hidden"
           style={{

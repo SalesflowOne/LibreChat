@@ -7,7 +7,7 @@ import { getConfigDefaults, getEndpointField } from 'librechat-data-provider';
 import type { TEndpointsConfig } from 'librechat-data-provider';
 import type { NavLink } from '~/common';
 import ConversationsSection from '~/components/UnifiedSidebar/ConversationsSection';
-import CommandCenter from '~/components/AgentOps/CommandCenter';
+import CommandCenterPanel from '~/components/AgentOps/CommandCenterPanel';
 import ConnectorHubPanel from '~/components/AgentOps/ConnectorHubPanel';
 import { useGetEndpointsQuery, useGetStartupConfig } from '~/data-provider';
 import useSideNavLinks from '~/hooks/Nav/useSideNavLinks';
@@ -59,7 +59,8 @@ export default function useUnifiedSidebarLinks() {
       label: '',
       icon: LayoutDashboard,
       id: 'command-center',
-      Component: CommandCenter,
+      Component: CommandCenterPanel,
+      onClick: () => navigate('/home'),
     };
 
     const connectorsLink: NavLink = {

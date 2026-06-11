@@ -108,7 +108,7 @@ export default function IntegrationDetail() {
   }
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-6xl flex-col gap-6 overflow-y-auto p-6">
+    <AgentOpsPage>
       <nav className="flex items-center gap-1 text-sm text-text-secondary" aria-label="Breadcrumb">
         <Link to="/connectors" className="hover:text-text-primary">
           {localize('com_ui_integrations_breadcrumb')}
@@ -264,6 +264,6 @@ export default function IntegrationDetail() {
           </Button>
         </div>
       )}
-    </div>
+    </AgentOpsPage>
   );
 }
