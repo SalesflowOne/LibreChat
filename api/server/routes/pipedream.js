@@ -3,6 +3,7 @@ const { PermissionTypes, Permissions } = require('librechat-data-provider');
 const { generateCheckAccess } = require('@librechat/api');
 const {
   getPipedreamStatusController,
+  getPipedreamAppsController,
   getPipedreamAccountsController,
   createPipedreamConnectTokenController,
 } = require('~/server/controllers/pipedream');
@@ -18,6 +19,7 @@ const checkMCPUsePermissions = generateCheckAccess({
 });
 
 router.get('/status', requireJwtAuth, checkMCPUsePermissions, getPipedreamStatusController);
+router.get('/apps', requireJwtAuth, checkMCPUsePermissions, getPipedreamAppsController);
 router.get('/accounts', requireJwtAuth, checkMCPUsePermissions, getPipedreamAccountsController);
 router.post(
   '/connect-token',

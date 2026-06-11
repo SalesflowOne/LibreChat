@@ -672,6 +672,13 @@ export const getPipedreamStatus = async (): Promise<pd.PipedreamStatusResponse> 
   return request.get(endpoints.pipedream.status());
 };
 
+export const getPipedreamApps = async (params?: {
+  q?: string;
+  limit?: number;
+}): Promise<{ apps: pd.PipedreamApp[] }> => {
+  return request.get(endpoints.pipedream.apps(params));
+};
+
 export const getPipedreamAccounts = async (
   appSlug?: string,
 ): Promise<pd.PipedreamAccountsResponse> => {

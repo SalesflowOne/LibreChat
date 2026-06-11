@@ -8,16 +8,17 @@ import {
   Switch,
 } from '@librechat/client';
 import { PermissionTypes, Permissions } from 'librechat-data-provider';
-import { useLocalize, useHasAccess } from '~/hooks';
+import { useDebounce, useLocalize, useHasAccess } from '~/hooks';
 import {
   usePipedreamAccountsQuery,
+  usePipedreamAppsQuery,
   usePipedreamStatusQuery,
 } from '~/data-provider/Pipedream';
 import MCPServerDialog from '~/components/SidePanel/MCPBuilder/MCPServerDialog';
 import AgentOpsPage, { AGENT_OPS_CARDS_GRID } from '~/components/AgentOps/Page';
 import IntegrationCard from './IntegrationCard';
 import { POPULAR_INTEGRATION_SLUGS } from './constants';
-import { filterAppsByQuery, getConnectedAppSlugs } from './utils';
+import { getConnectedAppSlugs } from './utils';
 
 type IntegrationTab = 'all' | 'popular';
 
@@ -33,18 +34,25 @@ export default function IntegrationsHub() {
     permission: Permissions.CREATE,
   });
 
+  const debouncedSearch = useDebounce(searchQuery, 300);
+
   const { data: status, isLoading: isStatusLoading } = usePipedreamStatusQuery();
+  const pipedreamEnabled = Boolean(status?.enabled);
+  const { data: appsData, isLoading: isAppsLoading } = usePipedreamAppsQuery(
+    { q: debouncedSearch || undefined },
+    pipedreamEnabled,
+  );
   const { data: accountsData, isLoading: isAccountsLoading } = usePipedreamAccountsQuery(
-    Boolean(status?.enabled),
+    pipedreamEnabled,
   );
 
   const accounts = accountsData?.accounts ?? [];
-  const apps = status?.apps ?? [];
+  const apps = appsData?.apps ?? [];
 
   const connectedSlugs = useMemo(() => getConnectedAppSlugs(accounts), [accounts]);
 
   const visibleApps = useMemo(() => {
-    let filtered = filterAppsByQuery(apps, searchQuery);
+    let filtered = apps;
 
     if (activeTab === 'popular') {
       const popularSet = new Set<string>(POPULAR_INTEGRATION_SLUGS);
@@ -56,9 +64,10 @@ export default function IntegrationsHub() {
     }
 
     return filtered;
-  }, [apps, searchQuery, activeTab, connectedOnly, connectedSlugs]);
+  }, [apps, activeTab, connectedOnly, connectedSlugs]);
 
-  const isLoading = isStatusLoading || (status?.enabled && isAccountsLoading);
+  const isLoading =
+    isStatusLoading || (pipedreamEnabled && (isAppsLoading || isAccountsLoading));
 
   return (
     <AgentOpsPage>
@@ -125,7 +134,7 @@ export default function IntegrationsHub() {
         <div className="flex justify-center py-16">
           <Spinner className="h-8 w-8" />
         </div>
-      ) : !status?.enabled || apps.length === 0 ? (
+      ) : !pipedreamEnabled ? (
         <div className="rounded-2xl border border-border-light bg-surface-primary p-8 text-center">
           <h2 className="text-lg font-medium text-text-primary">
             {localize('com_ui_integrations_not_configured_title')}

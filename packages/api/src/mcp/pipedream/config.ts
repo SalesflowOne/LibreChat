@@ -45,10 +45,14 @@ function parseAppsFromEnv(): PipedreamAppConfig[] {
     }));
 }
 
+export function isPipedreamProjectConfigured(): boolean {
+  return isPipedreamConfigured() && Boolean(process.env.PIPEDREAM_PROJECT_ID?.trim());
+}
+
 export function resolvePipedreamRuntimeConfig(
   yamlConfig?: PipedreamYamlConfig | null,
 ): PipedreamRuntimeConfig | null {
-  if (!isPipedreamConfigured()) {
+  if (!isPipedreamProjectConfigured()) {
     return null;
   }
 
@@ -57,9 +61,6 @@ export function resolvePipedreamRuntimeConfig(
   }
 
   const apps = yamlConfig?.apps?.length ? yamlConfig.apps : parseAppsFromEnv();
-  if (apps.length === 0) {
-    return null;
-  }
 
   const environment =
     process.env.PIPEDREAM_ENVIRONMENT === 'production' ? 'production' : 'development';
