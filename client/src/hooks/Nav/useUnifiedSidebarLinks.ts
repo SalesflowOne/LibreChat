@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useRecoilValue } from 'recoil';
 import { LayoutDashboard, MessagesSquare, PlugZap } from 'lucide-react';
 import { useUserKeyQuery } from 'librechat-data-provider/react-query';
@@ -15,6 +16,7 @@ import store from '~/store';
 const defaultInterface = getConfigDefaults().interface;
 
 export default function useUnifiedSidebarLinks() {
+  const navigate = useNavigate();
   const conversation = useRecoilValue(store.conversationByIndex(0));
   const endpoint = conversation?.endpoint;
   const { data: startupConfig } = useGetStartupConfig();
@@ -66,6 +68,7 @@ export default function useUnifiedSidebarLinks() {
       icon: PlugZap,
       id: 'connector-hub',
       Component: ConnectorHubPanel,
+      onClick: () => navigate('/connectors'),
     };
 
     const conversationLink: NavLink = {
@@ -77,7 +80,7 @@ export default function useUnifiedSidebarLinks() {
     };
 
     return [homeLink, connectorsLink, conversationLink, ...sideNavLinks];
-  }, [sideNavLinks]);
+  }, [navigate, sideNavLinks]);
 
   return links;
 }

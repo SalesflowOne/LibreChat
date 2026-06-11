@@ -25,6 +25,7 @@ import AgentOpsHome from './AgentOpsHome';
 import AgentOpsArtifacts from './AgentOpsArtifacts';
 import AgentOpsSpaces from './AgentOpsSpaces';
 import AgentOpsConnectors from './AgentOpsConnectors';
+import AgentOpsIntegrationDetail from './AgentOpsIntegrationDetail';
 import ClerkSignInRedirect from '~/components/Auth/Clerk/ClerkSignInRedirect';
 import ClerkAuthGate from '~/components/Auth/Clerk/ClerkAuthGate';
 import { isClerkEnabled } from '~/components/Auth/Clerk/ClerkRoot';
@@ -140,6 +141,10 @@ export const router = createBrowserRouter(
             {
               path: 'connectors',
               element: <AgentOpsConnectors />,
+            },
+            {
+              path: 'connectors/:appSlug',
+              element: <AgentOpsIntegrationDetail />,
             },
             {
               path: 'c/:conversationId?',
